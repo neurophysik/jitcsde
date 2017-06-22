@@ -4,7 +4,7 @@ The JiTCSDE module
 Introduction
 ------------
 
-JiTCSDE (just-in-time compilation for stochastic differential equations) is a standalone Python implementation of the adaptive integration method for Itō SDEs proposed by Rackauckas and Mie [RM17]_, which in turn employs Rößler-type stochastic Runge–Kutta methods [R10]_.
+JiTCSDE (just-in-time compilation for stochastic differential equations) is a standalone Python implementation of the adaptive integration method for Itō SDEs proposed by Rackauckas and Nie [RN17]_, which in turn employs Rößler-type stochastic Runge–Kutta methods [R10]_.
 JiTCSDE is designed in analogy to `JiTCODE`_ (which is handled very similarly to `SciPy’s ODE`_ (`scipy.integrate.ode`)):
 It takes an iterables (or generator functions) of `SymPy <http://www.sympy.org/>`_ expressions, translates them to C code, compiles them and an integrator wrapped around them on the fly, and allows you to operate this integrator from Python.
 
@@ -35,7 +35,7 @@ This documentation assumes that the Itō stochastic differential equation (SDE) 
 
 where :math:`y`, :math:`f`, :math:`g` and :math:`\mathrm{d} W(t)` are vectors or vector-valued, respectively, with the same dimension and :math:`⊙` indicates the component-wise product between vectors.
 
-Rackauckas’ and Mie’s method [RM17]_ basically works like an adaptive Runge–Kutta integrator for ordinary differential equations (ODEs):
+Rackauckas’ and Nie’s method [RN17]_ basically works like an adaptive Runge–Kutta integrator for ordinary differential equations (ODEs):
 It employs two stochastic Runge–Kutta integrators and uses the difference between them to estimate the error of the integration.
 These methods are intertwined to minimise the additional computational effort required to estimate the error.
 The step size is adapted to keep the estimated error below a user-determined threshold.
@@ -79,7 +79,7 @@ The main class
 References
 ----------
 
-.. [RM17] C. Rackauckas, Q. Nie: Adaptive methods for stochastic differential equations via natural embeddings and rejection sampling with memory, Discrete Cont. Dyn.-B 22, pp. 2731–2761 (2017), `10.3934/dcdsb.2017133 <http://dx.doi.org/10.3934/dcdsb.2017133>`_.
+.. [RN17] C. Rackauckas, Q. Nie: Adaptive methods for stochastic differential equations via natural embeddings and rejection sampling with memory, Discrete Cont. Dyn.-B 22, pp. 2731–2761 (2017), `10.3934/dcdsb.2017133 <http://dx.doi.org/10.3934/dcdsb.2017133>`_.
 
 .. [R10] A. Rößler, Runge–Kutta methods for the strong approximation of solutions of stochastic differential equations, SIAM J. Numer. Anal. 48, pp. 922–952 (2010) `10.1137/09076636X <http://dx.doi.org/10.1137/09076636X>`_.
 
