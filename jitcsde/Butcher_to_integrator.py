@@ -1,6 +1,7 @@
-from __future__ import division, print_function
-from sympy.abc import *
-from sympy import *
+#!/usr/bin/env python3
+
+from sympy.abc import X, t, h
+from sympy import sympify, symbols, Function, sqrt
 
 A0 = sympify("""[
 		[ 0 , 0, 0, 0],
@@ -34,48 +35,55 @@ c0 = sympify("[ 0, 3/4, 0,  0  ]")
 c1 = sympify("[ 0, 1/4, 1, 1/4 ]")
 
 α  = sympify("[ 1/3, 2/3,   0 , 0 ]")
+αt = sympify("[ 1/2, 1/2,   0 , 0 ]")
 β1 = sympify("[ -1,  4/3,  2/3, 0 ]")
 β2 = sympify("[ -1,  4/3, -1/3, 0 ]")
 β3 = sympify("[  2, -4/3, -2/3, 0 ]")
-β4 = sympify("[  2,  5/3, -2/3, 1 ]")
+β4 = sympify("[ -2,  5/3, -2/3, 1 ]")
+β3t = β4t = [0,0,0,0]
 
-H0 = DeferredVector("H0")
-H1 = DeferredVector("H1")
+H0 = H0_1, H0_2, H0_3, H0_4 = list(symbols("H0_1 H0_2 H0_3 H0_4"))
+H1 = H1_1, H1_2, H1_3, H1_4 = list(symbols("H1_1 H1_2 H1_3 H1_4"))
 
 I_1, I_11, I_111, I_10 = symbols("I_1 I_11 I_111 I_10")
 f = Function("f")
 g = Function("g")
 
-print("H0_i")
 for i in range(4):
-	result  = y
+	print("\nH^(0)_%i:"%i)
+	result  = X
 	result += sum( A0[i][j] * f(t+c0[j]*h,H0[j]) * h      for j in range(4) )
 	result += sum( B0[i][j] * g(t+c1[j]*h,H1[j]) * I_10/h for j in range(4) )
 	print(result)
 
-print("H1_i")
 for i in range(4):
-	result  = y
+	print("\nH^(1)_%i:"%i)
+	result  = X
 	result += sum( A1[i][j] * f(t+c0[j]*h,H0[j]) * h       for j in range(4) )
 	result += sum( B1[i][j] * g(t+c1[j]*h,H1[j]) * sqrt(h) for j in range(4) )
 	print(result)
 
-print("y_new")
-y_new  = y
-y_new += sum( α[i] * f(t+c0[i]*h,H0[i]) * h for i in range(4) )
-y_new += sum(	(
-					  β1[i] * I_1
-					+ β2[i] * I_11  / sqrt(h)
-					+ β3[i] * I_10  / h
-					+ β4[i] * I_111 / h
-				) * g( t+c1[i]*h, H1[i] )
-			for i in range(4)
-			)
-print(y_new)
+def solution(α, β1, β2, β3, β4):
+	X_bar  = X
+	X_bar += sum( α[i] * f(t+c0[i]*h,H0[i]) * h for i in range(4) )
+	for i in range(4):
+		X_bar += g( t+c1[i]*h, H1[i] ) * (
+						  β1[i] * I_1
+						+ β2[i] * I_11  / sqrt(h)
+						+ β3[i] * I_10  / h
+						+ β4[i] * I_111 / h
+					)
+	return X_bar
 
-print("error")
-E  = h/6 * f(t+c0[0]*h,H0[0])
-E -= h/6 * f(t+c0[1]*h,H0[1])
-E += sum( ( β3[i] * I_10/h + β4[i] * I_111/h ) * g( t+c1[i]*h, H1[i] ) for i in range(4) )
-print(E)
+X_bar = solution(α, β1, β2, β3, β4)
+print("\n\\bar{X}:")
+print(X_bar)
+
+X_hat   = solution(αt, β1, β2, β3 , β4 )
+X_tilde = solution(α , β1, β2, β3t, β4t)
+X_hatil = solution(αt, β1, β2, β3t, β4t)
+
+print("\nE:")
+E  = X_bar-X_hatil
+print(E.expand())
 

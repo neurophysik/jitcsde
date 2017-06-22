@@ -6,91 +6,177 @@ from __future__ import print_function, division
 from itertools import chain
 import sympy
 import numpy as np
+from numpy import sqrt
+from numpy.testing import assert_allclose
 
-class dde_integrator(object):
+def perform_step(t,h,f,g,y,I_1,I_11,I_111,I_10):
+	"""
+	Optimised step evaluation. Tested against a human-readable version in test_step_functions.py.
+	"""
+	fh_1 = f( t      , y                             ) * h
+	g_1  = g( t      , y                             )
+	fh_2 = f( t+3/4*h, y + 3/4*fh_1 + 3/2*g_1*I_10/h ) * h
+	g_2  = g( t+1/4*h, y + 1/4*fh_1 + 1/2*g_1*sqrt(h))
+	g_3  = g( t+    h, y +     fh_1 -     g_1*sqrt(h))
+	g_4  = g( t+1/4*h, y + 1/4*fh_1 + sqrt(h)*(-5*g_1+3*g_2+1/2*g_3) )
+	
+	E_N = (1/h/3)* (
+		+ (  6*I_10 - 6*I_111 ) * g_1
+		+ ( -4*I_10 + 5*I_111 ) * g_2
+		+ ( -2*I_10 - 2*I_111 ) * g_3
+		+ (           3*I_111 ) * g_4
+		)
+	I_11dbsqh = I_11/sqrt(h)
+	new_y = y + E_N + (1/3)*(
+		fh_1 + 2*fh_2
+		+ (-3*I_1 - 3*I_11dbsqh ) * g_1
+		+ ( 4*I_1 + 4*I_11dbsqh ) * g_2
+		+ ( 2*I_1 -   I_11dbsqh ) * g_3
+		)
+	E_D = (fh_2-fh_1)/6
+	
+	return new_y, E_D, E_N
+
+def perform_SRA_step(t,h,f,g,y,I_1,I_10):
+	"""
+	Optimised step evaluation. Tested against a human-readable version in test_step_functions.py.
+	"""
+	fh_1 = f( t      , y                             ) * h
+	g_1  = g( t+h                                    )
+	fh_2 = f( t+3/4*h, y + 3/4*fh_1 + 1/2*g_1*I_10/h ) * h
+	g_2  = g( t                                      )
+	
+	E_N = I_10/h*(g_2-g_1)
+	new_y = y + E_N + (1/3)*(fh_1 + 2*fh_2) + I_1*g_1
+	E_D = (fh_2-fh_1)/6
+	
+	return new_y, E_D, E_N
+
+class sde_integrator(object):
 	def __init__(self,
 				f,
 				g,
 				y,
 				t = 0.0,
-				helpers = (),
+				f_helpers = (),
+				g_helpers = (),
 				control_pars = (),
+				seed = None,
+				additive = False
 			):
-		self.y = y
-		self.n = len(self.y)
+		self.state = y
+		self.n = len(self.state)
 		self.t = t
 		self.parameters = []
-		self.past_noise = []
+		self.noises = []
+		self.noise_index = None
+		self.new_y = None
+		self.new_t = None
+		self.RNG = np.random.RandomState(seed)
+		self.additive = additive
 		
-		from jitcode import t, y # TODO: update, once finished
+		from jitcsde import t, y
 		Y = sympy.DeferredVector("Y")
-		substitutions = list(helpers[::-1]) + [(y(i),Y[i]) for i in range(self.n)]
+		basic_subs = [(y(i),Y[i]) for i in range(self.n)]
+		f_substitutions = list(reversed(f_helpers)) + basic_subs
+		g_substitutions = list(reversed(g_helpers)) + basic_subs
 		
-		f_wc = [ entry.subs(substitutions).simplify(ratio=1.0) for entry in f() ]
-		g_wc = [ entry.subs(substitutions).simplify(ratio=1.0) for entry in g() ]
+		f_wc = [ entry.subs(f_substitutions).simplify(ratio=1.0) for entry in f() ]
+		g_wc = [ entry.subs(g_substitutions).simplify(ratio=1.0) for entry in g() ]
 		
 		F = sympy.lambdify( [t, Y]+list(control_pars), f_wc )
-		G = sympy.lambdify( [t, Y]+list(control_pars), g_wc )
-		
 		self.f = lambda t,Y: np.array(F(t,Y,*self.parameters)).flatten()
-		self.g = lambda t,Y: np.array(G(t,Y,*self.parameters)).flatten()
+		
+		if self.additive:
+			G = sympy.lambdify( [t]+list(control_pars), g_wc )
+			self.g = lambda t: np.array(G(t,*self.parameters)).flatten()
+		else:
+			G = sympy.lambdify( [t, Y]+list(control_pars), g_wc )
+			self.g = lambda t,Y: np.array(G(t,Y,*self.parameters)).flatten()
 	
 	def set_parameters(self, *parameters):
 		self.parameters = parameters
 	
-	def get_t(self):
-		return self.t
+	def get_numpy_noise(self,scale):
+		# Switching the shape and transposing may look pointless, but ensures comparability of with the C backend for testing purposes.
+		return self.RNG.normal(0,scale,(self.n,2)).T
+
+	def Brownian_bridge(self, h_need):
+		h,noise = self.noises[self.noise_index]
+		h_exc = h - h_need
+		factor = h_exc/h
+		noise_2 = factor*noise + self.get_numpy_noise(sqrt(factor*h_need))
+		noise_1 = noise - noise_2
+		self.noises[self.noise_index] = [h_exc,noise_2]
+		self.noises.insert( self.noise_index, [h_need,noise_1] )
 	
-	def get_noise(self, t, h):
-		if False: #t_in_past_noise:
-			pass # TODO
-		else:
-			DW = np.random.normal( 0, sqrt(h), self.n )
-			DZ = np.random.normal( 0, sqrt(h), self.n )
-#		self.add_past_noise(t, h, DW, DZ)
-		return DW, DZ
+	def append_noise(self, h):
+		noise = self.get_numpy_noise(sqrt(h))
+		self.noises.append([h,noise])
 	
-	def get_I(self, t, h):
-		DW, DZ = self.get_noise(t,h)
+	def get_noise(self, h_need):
+		noise_acc = 0
+		self.noise_index = 0
+		while h_need:
+			if self.noise_index < len(self.noises):
+				# use existing noise
+				h,noise = self.noises[self.noise_index]
+				if h <= h_need:
+					# completely use interval
+					noise_acc += noise
+					h_need -= h
+					self.noise_index += 1
+				else:
+					# split interval with Brownian bridge
+					self.Brownian_bridge(h_need)
+			else:
+				# create new noise
+				self.append_noise(h_need)
+		
+		return noise_acc
+	
+	def get_I(self, h):
+		DW, DZ = self.get_noise(h)
 		I_11  = ( DW**2 -   h    )/2
 		I_111 = ( DW**3 - 3*h*DW )/6
 		I_10  = ( DW + DZ/sqrt(3))/2*h
 		return DW, I_11, I_111, I_10
 	
+	def get_I_SRA(self, h):
+		DW, DZ = self.get_noise(h)
+		I_10  = ( DW + DZ/sqrt(3))/2*h
+		return DW, I_10
+	
 	def get_next_step(self, h):
-		I_1, I_11, I_111, I_10 = self.get_I(self.t,h)
-		
-		t = self.t
-		y = self.y
-		
-		H0_1 = H1_1 = H0_3 = H0_4 = y
-		H0_2 = y + 3/4*f(t,H0_1)*h + 3/2*g(t,H1_1)*I_10/h
-		H1_2 = y + 1/4*f(t,H0_1)*h + 1/2*g(t,H1_1)*sqrt(h)
-		H1_3 = y +     f(t,H0_1)*h -     g(t,H1_1)*sqrt(t)
-		H1_4 = y + 1/4*f(t,H0_3)*h + sqrt(h)*(
-				-5*g(t,H1_1)+ 3*g(t+h/4,H1_2) + 1/2*g(t+h,H1_3) )
-		self.new_y = y + (
-			  1/3 * f(t,H0_1) * h  +  2/3 * f(t+3/4*h,H0_2) * h
-			+ (  -  I_1 -     I_11/sqrt(h) +  2 *I_10/h +  2 *I_111/h ) * g(t    ,H1_1)
-			+ ( 4/3*I_1 + 4/3*I_11/sqrt(h) - 4/3*I_10/h + 5/3*I_111/h ) * g(t+h/4,H1_2)
-			+ ( 2/3*I_1 - 1/3*I_11/sqrt(h) - 2/3*I_10/h - 2/3*I_111/h ) * g(t+h  ,H1_3)
-			+ (                                               I_111/h ) * g(t+h/4,H1_4)
-			)
-		self.error = h/6*f(t,H0_1) - h/6*f(t+3*h/4,H0_2) + (
-			+ (   2 *I_10/h +  2 *I_111/h ) * g(t    ,H1_1)
-			+ ( -4/3*I_10/h + 5/3*I_111/h ) * g(t+h/4,H1_2)
-			+ ( -2/3*I_10/h - 2/3*I_111/h ) * g(t+h  ,H1_3)
-			+ (                   I_111/h ) * g(t+h/4,H1_4)
-			)
-		
-		self.new_t = t+h
+		if self.additive:
+			I = self.get_I_SRA(h)
+			self.new_y, E_D, E_N = perform_SRA_step(self.t,h,self.f,self.g,self.state,*I)
+		else:
+			I = self.get_I(h)
+			self.new_y, E_D, E_N = perform_step(self.t,h,self.f,self.g,self.state,*I)
+		self.error = abs(E_D) + abs(E_N)
+		self.new_t = self.t+h
+	
+	def get_state(self):
+		return self.state
 	
 	def get_p(self, atol, rtol):
-		with np.errstate(divide='ignore', invalid='ignore'):
-			return np.nanmax(np.abs(self.error)/(atol + rtol*np.abs()))
+		with np.errstate(divide='ignore',invalid='ignore'):
+			return np.nanmax(self.error/(atol + rtol*np.abs(self.new_y)))
+	
+	def print_noises(self):
+		if self.noises:
+			for noise in self.noises:
+				print("%e\t%e\t%e"%(noise[0],noise[1][0][0],noise[1][1][0]))
+		else:
+			print("no noise")
+		print(self.noise_index)
+		print("-------")
 	
 	def accept_step(self):
-		self.y = self.new_y
+		self.state = self.new_y
 		self.t = self.new_t
-
+		if self.noise_index is not None:
+			del self.noises[:self.noise_index]
+		self.noise_index = None
 
