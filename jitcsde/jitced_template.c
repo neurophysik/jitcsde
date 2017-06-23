@@ -69,7 +69,7 @@ static inline void * safe_malloc(size_t size)
 {
 	void * pointer = malloc(size);
 	if (pointer == NULL)
-		PyErr_SetString(PyExc_ValueError,"Could not allocate memory.");
+		PyErr_SetString(PyExc_MemoryError,"Could not allocate memory.");
 	return pointer;
 }
 
