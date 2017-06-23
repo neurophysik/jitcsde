@@ -285,7 +285,7 @@ class jitcsde(jitcxde):
 			If smaller than 1, no chunking will happen.
 		
 		numpy_rng : boolean
-			Whether `numpy.random.normal` shall be explicitly employed for generating random numbers. This mainly exists for testing purposes to ensure that the random numbers are the same as when using the Python backend. Note that the alternative is still based on the same code as NumPy’s random-number generator and should produce the same results – until somebody changes the latter. Also note that details in the arithmetic realisation may still cause tiny differences in the results from the two backends, which can then be magnified by the butterfly effect.
+			Whether `numpy.random.normal` shall be explicitly employed for generating random numbers. This is less efficient and mainly exists for testing purposes to ensure that the random numbers are the same as when using the Python backend. Note that the alternative is still based on the same code as NumPy’s random-number generator (until somebody changes it) and should produce the same results. Also note that details in the arithmetic realisation may still cause tiny differences in the results from the two backends, which can then be magnified by the butterfly effect.
 		
 		extra_compile_args : list of strings
 			Arguments to be handed to the C compiler on top of what Setuptools chooses. In most situations, it’s best not to write your own list, but modify `DEFAULT_COMPILE_ARGS`, e.g., like this: `compile_C(extra_compile_args = DEFAULT_COMPILE_ARGS + ["--my-flag"])`. However, if your compiler cannot handle one of the `DEFAULT_COMPILE_ARGS`, you best write your own arguments.
