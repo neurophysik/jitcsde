@@ -16,10 +16,6 @@
 
 # define TYPE_INDEX NPY_DOUBLE
 
-{% if not numpy_rng %}
-# include "random_numbers.c"
-{% endif %}
-
 typedef struct noise_item
 {
 	double h;
@@ -71,14 +67,10 @@ typedef struct
 
 static inline void * safe_malloc(size_t size)
 {
-	void * result = malloc(size);
-	if (result)
-		return result;
-	else
-	{
+	void * pointer = malloc(size);
+	if (pointer == NULL)
 		PyErr_SetString(PyExc_ValueError,"Could not allocate memory.");
-		return NULL;
-	}
+	return pointer;
 }
 
 static inline noise_item * malloc_noise(void)
@@ -125,28 +117,21 @@ noise_item * append_noise_item(sde_integrator * const self)
 }
 
 {% if numpy_rng %}
-PyArrayObject * get_numpy_noise( sde_integrator * const self, double const scale )
-{
-	return (PyArrayObject *) PyObject_CallFunction(
-			self->noise_function,
-			"ddO",
-			0.0,
-			scale,
-			self->noise_size
-		);
-}
-{% endif %}
 
-void numpy_noise(
+void get_gauss(
 	sde_integrator * const self,
 	double const scale,
 	double DW[{{n}}],
 	double DZ[{{n}}]
 	)
 {
-	{% if numpy_rng %}
-	
-	PyArrayObject * noise = get_numpy_noise(self,scale);
+	PyArrayObject * noise = (PyArrayObject *) PyObject_CallFunction(
+			self->noise_function,
+			"ddO",
+			0.0,
+			scale,
+			self->noise_size
+		);
 	
 	for (int i=0; i<{{n}}; i++)
 	{
@@ -155,47 +140,24 @@ void numpy_noise(
 	}
 	
 	Py_DECREF(noise);
-	
-	{% else %}
-	
-	for (int i=0; i<{{n}}; i++)
-		rk_gauss(self->RNG, &DW[i], &DZ[i], scale);
-	
-	{% endif %}
 }
 
-void add_numpy_noise(
+{% else %}
+
+# include "random_numbers.c"
+
+void get_gauss(
 	sde_integrator * const self,
 	double const scale,
 	double DW[{{n}}],
 	double DZ[{{n}}]
 	)
 {
-	{% if numpy_rng %}
-	
-	PyArrayObject * noise = get_numpy_noise(self,scale);
-	
 	for (int i=0; i<{{n}}; i++)
-	{
-		DW[i] += * (double *) PyArray_GETPTR2(noise,i,0);
-		DZ[i] += * (double *) PyArray_GETPTR2(noise,i,1);
-	}
-	
-	Py_DECREF(noise);
-	
-	{% else %}
-	
-	for (int i=0; i<{{n}}; i++)
-	{
-		double DW_inc;
-		double DZ_inc;
-		rk_gauss(self->RNG, &DW_inc, &DZ_inc, scale);
-		DW[i] += DW_inc;
-		DZ[i] += DZ_inc;
-	}
-	
-	{% endif %}
+		rk_gauss( self->RNG, &DW[i], &DZ[i], scale );
 }
+
+{% endif %}
 
 void remove_first_noise(sde_integrator * const self)
 {
@@ -214,7 +176,7 @@ void append_noise(sde_integrator * const self, double const h_need)
 	noise_item * new_noise = append_noise_item(self);
 	self->current_noise = new_noise;
 	new_noise->h = h_need;
-	numpy_noise( self, sqrt(h_need), new_noise->DW, new_noise->DZ );
+	get_gauss( self, sqrt(h_need), new_noise->DW, new_noise->DZ );
 }
 
 void Brownian_bridge(sde_integrator * const self, double const h_need)
@@ -226,7 +188,7 @@ void Brownian_bridge(sde_integrator * const self, double const h_need)
 	double const factor = h_exc/h;
 	
 	noise_2->h = h_exc;
-	numpy_noise( self, sqrt(factor*h_need), noise_2->DW, noise_2->DZ );
+	get_gauss( self, sqrt(factor*h_need), noise_2->DW, noise_2->DZ );
 	for (int i=0; i<{{n}}; i++)
 	{
 		noise_2->DW[i] += noise_1->DW[i]*factor;
