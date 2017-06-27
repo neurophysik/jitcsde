@@ -135,6 +135,10 @@ class sde_integrator(object):
 		
 		return noise_acc
 	
+	def pin_noise(self, number, step):
+		for _ in range(number):
+			self.append_noise(step)
+
 	def get_I(self, h):
 		DW, DZ = self.get_noise(h)
 		I_11  = ( DW**2 -   h    )/2

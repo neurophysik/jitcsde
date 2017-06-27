@@ -248,6 +248,24 @@ void get_noise(
 			DW_acc[i] = DZ_acc[i] = 0;
 }
 
+static int pin_noise(sde_integrator * self, PyObject * args)
+{
+
+	int number;
+	double step;
+	
+	if (!PyArg_ParseTuple(args,"dI",&step,&number))
+	{
+		PyErr_SetString(PyExc_ValueError,"Wrong input.");
+		return 1;
+	}
+	
+	for (int i=0; i<number; i++)
+		append_noise(self, step);
+	
+	return 0;
+}
+
 void get_I(
 		sde_integrator * const self,
 		double const h,
@@ -542,6 +560,7 @@ static PyMethodDef sde_integrator_methods[] = {
 	{% if control_pars|length %}
 	{"set_parameters", (PyCFunction) set_parameters, METH_VARARGS, NULL},
 	{% endif %}
+	{"pin_noise", (PyCFunction) pin_noise, METH_VARARGS, NULL},
 	{"get_next_step", (PyCFunction) get_next_step, METH_VARARGS, NULL},
 	{"get_p", (PyCFunction) get_p, METH_VARARGS, NULL},
 	{"accept_step", (PyCFunction) accept_step, METH_NOARGS, NULL},
