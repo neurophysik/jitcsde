@@ -46,35 +46,50 @@ def test_python_core(
 			np.array([0]),
 			additive=scenario["additive"]
 			)
+	
 	for _ in range(N):
 		each_step(SDE)
 		SDE.get_next_step(dt)
 		SDE.accept_step()
 		yield SDE.get_state()[0]
 
-def test_integrator(scenario,dt=0.001,python=False):
+def test_integrator(scenario,dt=0.001,python=False,pin=False):
 	SDE = jitcsde( [scenario["F"]], [scenario["G"]], verbose=False )
 	SDE.set_initial_value( np.array([0.0]) )
+	
+	if pin:
+		size = np.random.exponential(dt)
+		number = int(times[-1]/size)
+		SDE.pin_noise(number,size)
+	
 	if python:
 		SDE.generate_lambdas()
 	else:
 		SDE.compile_C()
+	
 	for t in times(dt):
 		yield SDE.integrate(t)
 
 def cases(scenario):
 	dt = 0.0001
-	yield dt, lambda: test_python_core(scenario, dt)
+	yield dt, lambda: test_python_core(scenario, dt), "Python core"
 	
 	# Tests the noise memory by making random request in-between the steps.
 	each_step = lambda SDE: SDE.get_noise(np.random.exponential(dt))
-	yield dt, lambda: test_python_core(scenario, dt, each_step)
+	yield (
+		dt,
+		lambda: test_python_core(scenario, dt, each_step),
+		"Python core with additional random noise requests"
+	)
 	
 	for dt in (0.0001,0.0003):
 		for python in (False,True):
-			name = "integrator with dt=%f and %s" % (dt,"Python" if python else "C")
-			results = lambda: test_integrator(scenario,dt,python)
-			yield dt, results, name
+			for pin in (False,True):
+				name = "integrator with dt=%f" % dt
+				name += " and %s" % ("Python" if python else "C")
+				name += " and noise pinning" if pin else ""
+				results = lambda: test_integrator(scenario,dt,python)
+				yield dt, results, name
 
 def kmc_test(dt, result):
 	F = scenario["F"]
@@ -107,11 +122,11 @@ def kmc_test(dt, result):
 retries = 0
 
 for scenario in scenarios:
-	for case in cases(scenario):
+	for dt, results, name in cases(scenario):
 		for _ in range(5):
 			try:
 				with np.errstate(invalid='ignore'):
-					kmc_test(*case[:2])
+					kmc_test(dt,results)
 			except KMC_Error:
 				retries += 1
 				print("R", end="")
@@ -121,7 +136,7 @@ for scenario in scenarios:
 			finally:
 				stdout.flush()
 		else:
-			raise AssertionError("Testing %s failed five times. Something is probably really wrong" % case[2])
+			raise AssertionError("Testing %s failed five times. Something is probably really wrong" % name)
 print("")
 
 if retries:

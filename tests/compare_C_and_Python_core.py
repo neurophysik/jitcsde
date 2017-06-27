@@ -87,6 +87,10 @@ for additive in [True,False]:
 			P.accept_step()
 			C.accept_step()
 		
+		def pin_noise():
+			step = RNG.uniform(1e-7,1e-3)
+			number = RNG.randint(0,20)
+		
 		# Many methods cannot be expected to produce anything reasonable without one step being made:
 		get_next_step()
 		
@@ -96,6 +100,7 @@ for additive in [True,False]:
 				get_p,
 				accept_step,
 				get_state,
+				pin_noise
 				]
 		
 		for i in range(10):
