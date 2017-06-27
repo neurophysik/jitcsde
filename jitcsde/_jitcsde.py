@@ -93,6 +93,9 @@ class jitcsde(jitcxde):
 		
 		super(jitcsde,self).__init__(verbose,module_location)
 		
+		if f_sym and not g_sym and not module_location:
+			raise ValueError("You gave f_sym as an argument but neither g_sym nor module_location. JiTCSDE cannot properly work with this.")
+		
 		self.f_sym, self.n = handle_input(f_sym,n)
 		self.g_sym, _ = handle_input(g_sym,self.n)
 		self.control_pars = control_pars
