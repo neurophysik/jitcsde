@@ -6,21 +6,15 @@ from __future__ import print_function, absolute_import, division
 from warnings import warn
 from itertools import count
 from os import path as path
-from sys import version_info
-import sympy
-import numpy as np
 import shutil
 import random
-import jitcsde._python_core as python_core
+import sympy
+import numpy as np
 from jitcxde_common import (
 	jitcxde,
-	ensure_suffix, count_up,
-	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
 	handle_input, sort_helpers, sympify_helpers, copy_helpers, filter_helpers,
 	render_and_write_code,
-	render_template,
 	collect_arguments,
-	random_direction
 	)
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
@@ -104,6 +98,8 @@ class jitcsde(jitcxde):
 		self.seed = None
 		self._y = None
 		self._t = None
+		
+		self.step_count = 0
 		
 		self._arrange_helpers(helpers,g_helpers)
 		
@@ -193,9 +189,9 @@ class jitcsde(jitcxde):
 		valid_symbols = [t] + [helper[0] for helper in self.helpers] + list(self.control_pars)
 		
 		for function,name in [(f_sym, "f_sym"), (g_sym, "g_sym")]:
-			assert self.function(), "%s is empty." % name
+			assert function(), "%s is empty." % name
 		
-			for i,entry in enumerate(self.function()):
+			for i,entry in enumerate(function()):
 				for argument in collect_arguments(entry,y):
 					if argument[0] < 0:
 						problem("y is called with a negative argument (%i) in component %i of %s." % (argument[0], i, name))
@@ -240,6 +236,8 @@ class jitcsde(jitcxde):
 		"""
 		Explicitly initiates a purely Python-based integrator.
 		"""
+		
+		import jitcsde._python_core as python_core
 		
 		assert self.y is not None, "You need to set an initial value first."
 		assert self.t is not None, "You need to set an initial time first."
@@ -308,7 +306,6 @@ class jitcsde(jitcxde):
 				( self.f_sym, self.f_helpers, "f", "set_drift"     ),
 				( self.g_sym, self.g_helpers, "g", "set_diffusion" )
 				]:
-			helpername = name + "_helper"
 			wc = sym()
 			helpers_wc = copy_helpers(helpers)
 			
@@ -568,6 +565,7 @@ class jitcsde(jitcxde):
 					actual_dt = target_time - self.SDE.t
 					last_step = True
 				self.SDE.get_next_step(actual_dt)
+				self.step_count += 1
 				
 				if self._adjust_step_size(actual_dt):
 					self.SDE.accept_step()
