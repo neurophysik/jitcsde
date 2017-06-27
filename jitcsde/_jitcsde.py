@@ -603,4 +603,6 @@ class jitcsde(jitcxde):
 		assert number>=0, "Number must be non-negative"
 		assert step_size>0, "Step size must be positive"
 		
+		self._initiate()
 		self.SDE.pin_noise(number,step_size)
+

@@ -88,8 +88,10 @@ for additive in [True,False]:
 			C.accept_step()
 		
 		def pin_noise():
-			step = RNG.uniform(1e-7,1e-3)
-			number = RNG.randint(0,20)
+			step = RNG.uniform(1e-8,1.0)
+			number = RNG.randint(0,5)
+			P.pin_noise(number,step)
+			C.pin_noise(number,step)
 		
 		# Many methods cannot be expected to produce anything reasonable without one step being made:
 		get_next_step()

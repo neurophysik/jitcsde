@@ -59,7 +59,7 @@ def test_integrator(scenario,dt=0.001,python=False,pin=False):
 	
 	if pin:
 		size = np.random.exponential(dt)
-		number = int(times[-1]/size)
+		number = int(times(dt)[-1]/size)
 		SDE.pin_noise(number,size)
 	
 	if python:

@@ -248,22 +248,21 @@ void get_noise(
 			DW_acc[i] = DZ_acc[i] = 0;
 }
 
-static int pin_noise(sde_integrator * self, PyObject * args)
+static PyObject * pin_noise(sde_integrator * self, PyObject * args)
 {
-
-	int number;
+	unsigned int number;
 	double step;
 	
-	if (!PyArg_ParseTuple(args,"dI",&step,&number))
+	if (!PyArg_ParseTuple(args,"Id",&number,&step))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
-		return 1;
+		return NULL;
 	}
 	
 	for (int i=0; i<number; i++)
 		append_noise(self, step);
 	
-	return 0;
+	Py_RETURN_NONE;
 }
 
 void get_I(
