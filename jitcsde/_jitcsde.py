@@ -592,10 +592,12 @@ class jitcsde(jitcxde):
 		
 		number : integer
 			number of pre-defined noise points
-
+		
 		step_size : float
 			distance of pre-defined noise points
 		"""
 		
 		assert number>=0, "Number must be non-negative"
 		assert step_size>0, "Step size must be positive"
+		
+		self.SDE.pin_noise(number,step_size)
