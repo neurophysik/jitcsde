@@ -6,21 +6,15 @@ from __future__ import print_function, absolute_import, division
 from warnings import warn
 from itertools import count
 from os import path as path
-from sys import version_info
-import sympy
-import numpy as np
 import shutil
 import random
-import jitcsde._python_core as python_core
+import sympy
+import numpy as np
 from jitcxde_common import (
 	jitcxde,
-	ensure_suffix, count_up,
-	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
 	handle_input, sort_helpers, sympify_helpers, copy_helpers, filter_helpers,
 	render_and_write_code,
-	render_template,
 	collect_arguments,
-	random_direction
 	)
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
@@ -105,6 +99,8 @@ class jitcsde(jitcxde):
 		self._y = None
 		self._t = None
 		
+		self.step_count = 0
+		
 		self._arrange_helpers(helpers,g_helpers)
 		
 		if additive is None:
@@ -156,7 +152,7 @@ class jitcsde(jitcxde):
 		The current time of the integrator.
 		"""
 		if self.SDE:
-			return self.SDE.t()
+			return self.SDE.t
 		else:
 			return self._t
 	
@@ -193,9 +189,9 @@ class jitcsde(jitcxde):
 		valid_symbols = [t] + [helper[0] for helper in self.helpers] + list(self.control_pars)
 		
 		for function,name in [(f_sym, "f_sym"), (g_sym, "g_sym")]:
-			assert self.function(), "%s is empty." % name
+			assert function(), "%s is empty." % name
 		
-			for i,entry in enumerate(self.function()):
+			for i,entry in enumerate(function()):
 				for argument in collect_arguments(entry,y):
 					if argument[0] < 0:
 						problem("y is called with a negative argument (%i) in component %i of %s." % (argument[0], i, name))
@@ -211,7 +207,7 @@ class jitcsde(jitcxde):
 	
 	def reset_integrator(self):
 		"""
-		Resets the integrator, forgetting all stored noise and forcing re-initiation when it is needed next.
+		Resets the integrator, forgetting all stored noise (and waiting times for `jitcsde_jump` and forcing re-initiation when it is needed next.
 		"""
 		self.SDE = None
 	
@@ -240,6 +236,8 @@ class jitcsde(jitcxde):
 		"""
 		Explicitly initiates a purely Python-based integrator.
 		"""
+		
+		import jitcsde._python_core as python_core
 		
 		assert self.y is not None, "You need to set an initial value first."
 		assert self.t is not None, "You need to set an initial time first."
@@ -308,7 +306,6 @@ class jitcsde(jitcxde):
 				( self.f_sym, self.f_helpers, "f", "set_drift"     ),
 				( self.g_sym, self.g_helpers, "g", "set_diffusion" )
 				]:
-			helpername = name + "_helper"
 			wc = sym()
 			helpers_wc = copy_helpers(helpers)
 			
@@ -568,6 +565,7 @@ class jitcsde(jitcxde):
 					actual_dt = target_time - self.SDE.t
 					last_step = True
 				self.SDE.get_next_step(actual_dt)
+				self.step_count += 1
 				
 				if self._adjust_step_size(actual_dt):
 					self.SDE.accept_step()
@@ -605,4 +603,44 @@ class jitcsde(jitcxde):
 		
 		self._initiate()
 		self.SDE.pin_noise(number,step_size)
+
+class jitcsde_jump(jitcsde):
+	"""
+	An extension of `jitcsde` that can additionally handle random jumps. The handling is the same except for:
+	
+	Parameters
+	----------
+
+	IJI_dist : callable `IJI_dist(time,state)` returning a non-negative number
+		A function (or similar) that returns a waiting time for the next jump, i.e., that draws one value from the inter-jump-interval distribution. A new waiting time using this function is determined directly after each jump (and at the first call of `integrate`). Hence, only the state and time at those times affect the waiting time, if you choose it to be time- or state-dependent.
+	
+	amp_dist : callable `IJI_dist(time,state)` returning an array of size `n`.
+		A function (or similar) that returns the actual jump.
+	"""
+	
+	def __init__( self, IJI_dist, amp_dist, *args, **kwargs ):
+		super(jitcsde_jump,self).__init__(*args, **kwargs)
+		self.IJI_dist = IJI_dist
+		self.amp_dist = amp_dist
+		self._next_jump = None
+	
+	@property
+	def next_jump(self):
+		if self._next_jump is None:
+			self._initiate()
+			self._next_jump = self.t + self.IJI_dist(self.t,self.y)
+		return self._next_jump
+	
+	def reset_integrator(self):
+		super(jitcsde_jump,self).reset_integrator()
+		self._next_jump = None
+	
+	def integrate(self, target_time):
+		while self.next_jump<target_time:
+			state = super(jitcsde_jump,self).integrate(self.next_jump)
+			time = self.t
+			self.SDE.jump( self.amp_dist(time,state) )
+			self._next_jump = self.t + self.IJI_dist(time,self.y)
+		
+		return super(jitcsde_jump,self).integrate(target_time)
 
