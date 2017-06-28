@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from ._jitcsde import (
-		jitcsde,
+		jitcsde, jitcsde_jump,
 		t, y,
 		UnsuccessfulIntegration,
 		DEFAULT_COMPILE_ARGS,

@@ -152,7 +152,7 @@ class jitcsde(jitcxde):
 		The current time of the integrator.
 		"""
 		if self.SDE:
-			return self.SDE.t()
+			return self.SDE.t
 		else:
 			return self._t
 	
@@ -207,7 +207,7 @@ class jitcsde(jitcxde):
 	
 	def reset_integrator(self):
 		"""
-		Resets the integrator, forgetting all stored noise and forcing re-initiation when it is needed next.
+		Resets the integrator, forgetting all stored noise (and waiting times for `jitcsde_jump` and forcing re-initiation when it is needed next.
 		"""
 		self.SDE = None
 	
@@ -603,4 +603,44 @@ class jitcsde(jitcxde):
 		
 		self._initiate()
 		self.SDE.pin_noise(number,step_size)
+
+class jitcsde_jump(jitcsde):
+	"""
+	An extension of `jitcsde` that can additionally handle random jumps. The handling is the same except for:
+	
+	Parameters
+	----------
+
+	IJI_dist : callable `IJI_dist(time,state)` returning a non-negative number
+		A function (or similar) that returns a waiting time for the next jump, i.e., that draws one value from the inter-jump-interval distribution. A new waiting time using this function is determined directly after each jump (and at the first call of `integrate`). Hence, only the state and time at those times affect the waiting time, if you choose it to be time- or state-dependent.
+	
+	amp_dist : callable `IJI_dist(time,state)` returning an array of size `n`.
+		A function (or similar) that returns the actual jump.
+	"""
+	
+	def __init__( self, IJI_dist, amp_dist, *args, **kwargs ):
+		super(jitcsde_jump,self).__init__(*args, **kwargs)
+		self.IJI_dist = IJI_dist
+		self.amp_dist = amp_dist
+		self._next_jump = None
+	
+	@property
+	def next_jump(self):
+		if self._next_jump is None:
+			self._initiate()
+			self._next_jump = self.t + self.IJI_dist(self.t,self.y)
+		return self._next_jump
+	
+	def reset_integrator(self):
+		super(jitcsde_jump,self).reset_integrator()
+		self._next_jump = None
+	
+	def integrate(self, target_time):
+		while self.next_jump<target_time:
+			state = super(jitcsde_jump,self).integrate(self.next_jump)
+			time = self.t
+			self.SDE.jump( self.amp_dist(time,state) )
+			self._next_jump = self.t + self.IJI_dist(time,self.y)
+		
+		return super(jitcsde_jump,self).integrate(target_time)
 

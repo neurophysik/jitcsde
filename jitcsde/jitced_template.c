@@ -501,6 +501,22 @@ static PyObject * get_state(sde_integrator * const self)
 	# pragma GCC diagnostic pop
 }
 
+static PyObject * jump(sde_integrator * const self, PyObject * args)
+{
+	PyArrayObject * change;
+	
+	if (!PyArg_ParseTuple(args,"O!",&PyArray_Type,&change))
+	{
+		PyErr_SetString(PyExc_ValueError,"Wrong input.");
+		return NULL;
+	}
+	
+	for (int i=0; i<{{n}}; i++)
+		self->state[i] += * (double *) PyArray_GETPTR1(change,i);
+	
+	Py_RETURN_NONE;
+}
+
 static void sde_integrator_dealloc(sde_integrator * const self)
 {
 	while (self->noises)
@@ -559,12 +575,13 @@ static PyMethodDef sde_integrator_methods[] = {
 	{% if control_pars|length %}
 	{"set_parameters", (PyCFunction) set_parameters, METH_VARARGS, NULL},
 	{% endif %}
-	{"pin_noise", (PyCFunction) pin_noise, METH_VARARGS, NULL},
-	{"get_next_step", (PyCFunction) get_next_step, METH_VARARGS, NULL},
-	{"get_p", (PyCFunction) get_p, METH_VARARGS, NULL},
-	{"accept_step", (PyCFunction) accept_step, METH_NOARGS, NULL},
-	{"get_state", (PyCFunction) get_state, METH_NOARGS, NULL},
-	{NULL, NULL, 0, NULL}
+	{"pin_noise"     , (PyCFunction) pin_noise     , METH_VARARGS, NULL},
+	{"get_next_step" , (PyCFunction) get_next_step , METH_VARARGS, NULL},
+	{"get_p"         , (PyCFunction) get_p         , METH_VARARGS, NULL},
+	{"accept_step"   , (PyCFunction) accept_step   , METH_NOARGS , NULL},
+	{"jump"          , (PyCFunction) jump          , METH_VARARGS, NULL},
+	{"get_state"     , (PyCFunction) get_state     , METH_NOARGS , NULL},
+	{ NULL           ,               NULL          , 0           , NULL}
 };
 
 
