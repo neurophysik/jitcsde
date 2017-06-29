@@ -3,7 +3,7 @@
 
 """
 As an example, suppose that we want to add jumps to the noisy Lorenz oscillator from `example`.
-These shall have exponentially distributed waiting times (i.e. they are a Poisson process) with a scale parameter :math:`\beta=1.0`.
+These shall have exponentially distributed waiting times (i.e. they are a Poisson process) with a scale parameter :math:`β=1.0`.
 A function sampling such waiting times (inter-jump intervals) is:
 
 .. literalinclude:: ../examples/noisy_and_jumpy_lorenz.py
