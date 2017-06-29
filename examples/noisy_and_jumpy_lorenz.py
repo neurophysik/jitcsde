@@ -11,7 +11,7 @@ A function sampling such waiting times (inter-jump intervals) is:
 	:lines: 49-50
 
 Note that since our waiting times are neither state- nor time-dependent, we do not use the `time` and `state` argument.
-Next, we want the jumps to only apply to the second-to-last component, being normally distributed with zero mean and the current amplitude of this component as a standard deviation.
+Next, we want the jumps to only apply to the last component, being normally distributed with zero mean and the current amplitude of this component as a standard deviation.
 A function producing such a jump is:
 
 .. literalinclude:: ../examples/noisy_and_jumpy_lorenz.py
