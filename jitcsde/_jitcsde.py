@@ -99,8 +99,6 @@ class jitcsde(jitcxde):
 		self._y = None
 		self._t = None
 		
-		self.step_count = 0
-		
 		self._arrange_helpers(helpers,g_helpers)
 		
 		if additive is None:
@@ -565,7 +563,6 @@ class jitcsde(jitcxde):
 					actual_dt = target_time - self.SDE.t
 					last_step = True
 				self.SDE.get_next_step(actual_dt)
-				self.step_count += 1
 				
 				if self._adjust_step_size(actual_dt):
 					self.SDE.accept_step()
