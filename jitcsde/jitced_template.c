@@ -501,7 +501,7 @@ static PyObject * get_state(sde_integrator * const self)
 	# pragma GCC diagnostic pop
 }
 
-static PyObject * jump(sde_integrator * const self, PyObject * args)
+static PyObject * apply_jump(sde_integrator * const self, PyObject * args)
 {
 	PyArrayObject * change;
 	
@@ -579,7 +579,7 @@ static PyMethodDef sde_integrator_methods[] = {
 	{"get_next_step" , (PyCFunction) get_next_step , METH_VARARGS, NULL},
 	{"get_p"         , (PyCFunction) get_p         , METH_VARARGS, NULL},
 	{"accept_step"   , (PyCFunction) accept_step   , METH_NOARGS , NULL},
-	{"jump"          , (PyCFunction) jump          , METH_VARARGS, NULL},
+	{"apply_jump"    , (PyCFunction) apply_jump    , METH_VARARGS, NULL},
 	{"get_state"     , (PyCFunction) get_state     , METH_NOARGS , NULL},
 	{ NULL           ,               NULL          , 0           , NULL}
 };

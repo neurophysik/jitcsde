@@ -611,24 +611,24 @@ class jitcsde_jump(jitcsde):
 	Parameters
 	----------
 
-	IJI_dist : callable `IJI_dist(time,state)` returning a non-negative number
+	IJI : callable `IJI(time,state)` returning a non-negative number
 		A function (or similar) that returns a waiting time for the next jump, i.e., that draws one value from the inter-jump-interval distribution. A new waiting time using this function is determined directly after each jump (and at the first call of `integrate`). Hence, only the state and time at those times affect the waiting time, if you choose it to be time- or state-dependent.
 	
-	amp_dist : callable `IJI_dist(time,state)` returning an array of size `n`.
+	jump : callable `jump(time,state)` returning an array of size `n`.
 		A function (or similar) that returns the actual jump.
 	"""
 	
-	def __init__( self, IJI_dist, amp_dist, *args, **kwargs ):
+	def __init__( self, IJI, amp, *args, **kwargs ):
 		super(jitcsde_jump,self).__init__(*args, **kwargs)
-		self.IJI_dist = IJI_dist
-		self.amp_dist = amp_dist
+		self.IJI = IJI
+		self.amp = amp
 		self._next_jump = None
 	
 	@property
 	def next_jump(self):
 		if self._next_jump is None:
 			self._initiate()
-			self._next_jump = self.t + self.IJI_dist(self.t,self.y)
+			self._next_jump = self.t + self.IJI(self.t,self.y)
 		return self._next_jump
 	
 	def reset_integrator(self):
@@ -639,8 +639,8 @@ class jitcsde_jump(jitcsde):
 		while self.next_jump<target_time:
 			state = super(jitcsde_jump,self).integrate(self.next_jump)
 			time = self.t
-			self.SDE.jump( self.amp_dist(time,state) )
-			self._next_jump = self.t + self.IJI_dist(time,self.y)
+			self.SDE.apply_jump( self.amp(time,state) )
+			self._next_jump = self.t + self.IJI(time,self.y)
 		
 		return super(jitcsde_jump,self).integrate(target_time)
 

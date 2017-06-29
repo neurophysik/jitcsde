@@ -184,5 +184,5 @@ class sde_integrator(object):
 			del self.noises[:self.noise_index]
 		self.noise_index = None
 	
-	def jump(self,change):
+	def apply_jump(self,change):
 		self.state += change
