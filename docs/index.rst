@@ -49,6 +49,16 @@ A simple example
 
 .. automodule:: noisy_lorenz
 
+Jumps
+-----
+
+If you wish to have jumps on top of the Brownian noise (and thus obtain a jump–diffusion process), you can do this using the extension `jitcsde_jump`.
+It draws the waiting time between jumps as well as the value of the jump from a distribution that you specify.
+The jumps are positioned precisely, i.e., the dynamics is integrated up to the time of a jump, the jump is applied, and the integration is continued afterwards.
+
+Note that this functionality is implemented purely in Python, which makes it very flexible, but may also slows things down when the jump rate is high in comparison to the integration step (not to be confused with the sampling step), which however should not occur in typical applications.
+
+.. automodule:: noisy_and_jumpy_lorenz
 
 Networks and large equations
 ----------------------------
@@ -73,6 +83,11 @@ The main class
 	:members:
 	:inherited-members:
 
+Jumps
+^^^^^
+
+.. autoclass:: jitcsde_jump
+	:members:
 
 .. _reference:
 
