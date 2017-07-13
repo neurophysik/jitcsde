@@ -4,6 +4,9 @@ from numpy.testing.utils import assert_allclose
 from jitcsde import jitcsde, y
 import sympy
 import unittest
+from jitcxde_common import DEFAULT_COMPILE_ARGS
+
+compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG"]
 
 # Ensures that all kinds of formatting the input actually work and produce the same result. The correctness of this result itself is checked in validation_test.py.
 
@@ -34,7 +37,7 @@ class CompareResults(unittest.TestCase):
 		self.SDE.set_initial_value(initial_value,0.0)
 	
 	def test_numpy_rng(self):
-		self.SDE.compile_C(numpy_rng=True)
+		self.SDE.compile_C(numpy_rng=True,extra_compile_args=compile_args)
 		self.test_default()
 	
 	def test_reproducability(self):
@@ -46,11 +49,11 @@ class CompareResults(unittest.TestCase):
 	
 	def test_no_simplify(self):
 		self.test_default()
-		self.SDE.compile_C(simplify=False)
+		self.SDE.compile_C(simplify=False,extra_compile_args=compile_args)
 	
 	def test_no_cse(self):
 		self.test_default()
-		self.SDE.compile_C(do_cse=False)
+		self.SDE.compile_C(do_cse=False,extra_compile_args=compile_args)
 	
 	def test_save_and_load(self):
 		filename = self.SDE.save_compiled(overwrite=True)
