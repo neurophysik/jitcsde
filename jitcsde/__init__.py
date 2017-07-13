@@ -3,7 +3,6 @@ from ._jitcsde import (
 		jitcsde, jitcsde_jump,
 		t, y,
 		UnsuccessfulIntegration,
-		DEFAULT_COMPILE_ARGS,
 		)
 
 try:

@@ -24,6 +24,8 @@ This approach has the following advantages:
 
 If compilation fails to work for whatever reason, pure Python functions can be employed as a fallback (which is much slower, however).
 
+If you face issues with the compiler, want to optimise the speed, or wish to integrate network dynamics, also take a look at the `common JiTC*DE documentation`_.
+
 A brief mathematic background
 -----------------------------
 
@@ -93,6 +95,8 @@ Jumps
 
 References
 ----------
+
+.. _common JiTC*DE documentation: https://jitcde-common.readthedocs.io
 
 .. [RN17] C. Rackauckas, Q. Nie: Adaptive methods for stochastic differential equations via natural embeddings and rejection sampling with memory, Discrete Cont. Dyn.-B 22, pp. 2731–2761 (2017), `10.3934/dcdsb.2017133 <http://dx.doi.org/10.3934/dcdsb.2017133>`_.
 
