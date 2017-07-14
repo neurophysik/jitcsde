@@ -16,6 +16,10 @@
 
 # define TYPE_INDEX NPY_DOUBLE
 
+{% if not numpy_rng %}
+# include "random_numbers.c"
+{% endif %}
+
 typedef struct noise_item
 {
 	double h;
@@ -144,7 +148,6 @@ void get_gauss(
 
 {% else %}
 
-# include "random_numbers.c"
 
 void get_gauss(
 	sde_integrator * const self,

@@ -248,7 +248,7 @@ class jitcsde(jitcxde):
 		self,
 		simplify = True,
 		do_cse = True,
-		numpy_rng = True,
+		numpy_rng = False,
 		chunk_size = 100,
 		extra_compile_args = [],
 		extra_link_args = [],
