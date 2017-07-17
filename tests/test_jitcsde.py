@@ -2,11 +2,13 @@ from __future__ import print_function, division
 import numpy as np
 from numpy.testing.utils import assert_allclose
 from jitcsde import jitcsde, y
+import platform
 import sympy
 import unittest
-from jitcxde_common import DEFAULT_COMPILE_ARGS
 
-compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG"]
+if platform.system() != "Windows":
+	from jitcxde_common import DEFAULT_COMPILE_ARGS
+	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG"]
 
 # Ensures that all kinds of formatting the input actually work and produce the same result. The correctness of this result itself is checked in validation_test.py.
 
