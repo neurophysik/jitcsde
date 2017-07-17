@@ -14,14 +14,15 @@ from jitcsde import t, y, jitcsde
 import sympy
 import numpy as np
 from numpy.testing import assert_allclose
+import platform
 from random import Random
 from sys import argv, stdout
 
-compile_args = [
-	"-std=c11",
-	"-O0","-g","-UNDEBUG",
-	"-Wno-unknown-pragmas",
-	]
+if platform.system() == "Windows":
+	compile_args = None
+else:
+	from jitcxde_common import DEFAULT_COMPILE_ARGS
+	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG","-O0"]
 
 def compare(x,y,rtol=1e-5,atol=1e-5):
 	try:
