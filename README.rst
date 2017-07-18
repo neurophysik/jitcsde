@@ -12,7 +12,7 @@ Note that this is work in progress; features and names may change without warnin
 
 * `Issue Tracker <http://github.com/neurophysik/jitcsde/issues>`_
 
-* Download from `PyPI <http://pypi.python.org/pypi/jitcsde>`_ or just ``pip install jitcsde``.
+* Download from `PyPI <http://pypi.python.org/pypi/jitcode>`_ or just ``pip install jitcsde``.
 
 This work was supported by the Volkswagen Foundation (Grant No. 88463).
 
