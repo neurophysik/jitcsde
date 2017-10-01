@@ -6,7 +6,7 @@ Introduction
 
 JiTCSDE (just-in-time compilation for stochastic differential equations) is a standalone Python implementation of the adaptive integration method for Itō SDEs proposed by Rackauckas and Nie [RN17]_, which in turn employs Rößler-type stochastic Runge–Kutta methods [R10]_.
 JiTCSDE is designed in analogy to `JiTCODE`_ (which is handled very similarly to `SciPy’s ODE`_ (`scipy.integrate.ode`)):
-It takes an iterable (or generator functions) of `SymPy <http://www.sympy.org/>`_ expressions, translates them to C code, compiles them and an integrator wrapped around them on the fly, and allows you to operate this integrator from Python.
+It takes iterables (or generator functions) of `SymPy <http://www.sympy.org/>`_ expressions, translates them to C code, compiles them and an integrator wrapped around them on the fly, and allows you to operate this integrator from Python.
 
 This approach has the following advantages:
 
