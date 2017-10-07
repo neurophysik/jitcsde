@@ -571,7 +571,7 @@ class jitcsde(jitcxde):
 	
 	def pin_noise(self, number, step_size):
 		"""
-		Fills the noise memory with a realisation of the underlying Wiener process sampled at `number` points with a distance of `step_size` (i.e., for a total length of `number`∡`step_size`).
+		Fills the noise memory with a realisation of the underlying Wiener process sampled at `number` points with a distance of `step_size` (i.e., for a total length of `number`·`step_size`).
 		
 		This is mainly intended for testing purposes, e.g., if you want to investigate the influence of the step-size-adjustment parameters in a controlled setting. Note that this only pins the Wiener process at the specified points. All other points will have to be interpolated with a Brownian bridge, but the lower the `step_size`, the more constrained they will be. Note that this inevitably slows things down.
 		
