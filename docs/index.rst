@@ -76,7 +76,7 @@ Command reference
 
 .. automodule:: _jitcsde
 	:members:
-	:exclude-members: jitcsde
+	:exclude-members: jitcsde, jitcsde_jump
 
 The main class
 ^^^^^^^^^^^^^^
