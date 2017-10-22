@@ -2,10 +2,9 @@
 Compares results of the step function from the Python core with the one derived from the Butcher tableaus.
 """
 
-from __future__ import print_function, division
 import numpy as np
-from jitcsde._python_core import perform_step as step_1
-from Butcher              import perform_step as step_2
+from jitcsde._python_core import perform_step     as step_1
+from Butcher              import perform_step     as step_2
 from jitcsde._python_core import perform_SRA_step as SRA_step_1
 from Butcher_SRA          import perform_step     as SRA_step_2
 import unittest

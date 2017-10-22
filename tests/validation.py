@@ -9,9 +9,8 @@ from __future__ import print_function, division
 import numpy as np
 from jitcsde._python_core import sde_integrator
 from jitcsde import jitcsde, t, y
-import sympy
+import symengine
 from kmc import KMC
-from sys import stdout
 
 N  = 100000
 kmax = 3
@@ -23,16 +22,16 @@ class KMC_Error(Exception):
 	pass
 
 scenarios = [
-	{
-		"F": -y(0)**3 + 4*y(0) + y(0)**2,
-		"G": 5*sympy.exp(-y(0)**2+y(0)-1.5) + 3.0,
-		"additive": False
-	},
-	{
-		"F": -y(0)**3 + 4*y(0) + y(0)**2,
-		"G": sympy.sympify(3),
-		"additive": True
-	}
+		{
+			"F": -y(0)**3 + 4*y(0) + y(0)**2,
+			"G": 5*symengine.exp(-y(0)**2+y(0)-1.5) + 3.0,
+			"additive": False
+		},
+		{
+			"F": -y(0)**3 + 4*y(0) + y(0)**2,
+			"G": symengine.sympify(3),
+			"additive": True
+		}
 	]
 
 def test_python_core(
@@ -44,7 +43,7 @@ def test_python_core(
 			lambda:[scenario["F"]],
 			lambda:[scenario["G"]],
 			np.array([0]),
-			additive=scenario["additive"]
+			additive = scenario["additive"]
 			)
 	
 	for _ in range(N):
@@ -92,22 +91,20 @@ def cases(scenario):
 				yield dt, results, name
 
 def kmc_test(dt, result):
-	F = scenario["F"]
-	G = scenario["G"]
+	Y = symengine.Symbol("Y")
+	F = scenario["F"].subs(y(0),Y)
+	G = scenario["G"].subs(y(0),Y)
 	
 	# Theoretical expectation
 	M = [
-		sympy.lambdify( y(0), F + G*sympy.diff(G,y(0))/2 ),
-		sympy.lambdify( y(0), G**2 ),
+		symengine.Lambdify( Y, F + G*G.diff(Y)/2 ),
+		symengine.Lambdify( Y, G**2 ),
 		lambda x: 0,
 		lambda x: 0
 		]
 	
 	# Numerical estimate
-	# bins, *kmcs = KMC( result(), dt, kmax=kmax )
-	kmc_result = KMC( result(), dt, kmax=kmax )
-	bins = kmc_result[0]
-	kmcs = kmc_result[1:]
+	bins, *kmcs = KMC( result(), dt, kmax=kmax )
 	
 	# Comparing the two
 	for k in range(kmax):
@@ -129,12 +126,10 @@ for scenario in scenarios:
 					kmc_test(dt,results)
 			except KMC_Error:
 				retries += 1
-				print("R", end="")
+				print( "R", end="", flush=True )
 			else:
-				print(".", end="")
+				print( ".", end="", flush=True )
 				break
-			finally:
-				stdout.flush()
 		else:
 			raise AssertionError("Testing %s failed five times. Something is probably really wrong" % name)
 print("")

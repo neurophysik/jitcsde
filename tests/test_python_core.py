@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import numpy as np
 from jitcsde._python_core import sde_integrator
 from numpy.testing import assert_allclose, assert_array_equal
