@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
@@ -11,7 +11,7 @@ from __future__ import print_function
 from jitcsde._python_core import sde_integrator as py_sde_integrator
 from jitcsde import t, y, jitcsde
 
-import sympy
+import symengine
 import numpy as np
 from numpy.testing import assert_allclose
 import platform
@@ -40,19 +40,18 @@ F = [
 	y(0)*y(1)-8/3.*y(2)
 	]
 
-for additive in [True,False]:
+for additive in [False,True]:
 	if additive:
-		G = [sympy.sympify(i*0.05) for i in range(len(F))]
+		G = [ symengine.sympify(i*0.05) for i in range(len(F)) ]
 	else:
-		g = [ 0.1*y(i) for i in range(len(F)) ]
+		G = [ 0.1*y(i) for i in range(len(F)) ]
 	
 	RNG = Random()
 	
 	errors = 0
 	
 	for realisation in range(number_of_runs):
-		print(".", end="")
-		stdout.flush()
+		print( ".", end="", flush=True )
 		
 		seed = RNG.randint(0,1000000)
 		
@@ -104,7 +103,7 @@ for additive in [True,False]:
 				accept_step,
 				get_state,
 				pin_noise
-				]
+			]
 		
 		for i in range(10):
 			action = RNG.sample(actions,1)[0]
