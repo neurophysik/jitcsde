@@ -4,10 +4,11 @@
 from __future__ import print_function, division
 
 from itertools import chain
-import sympy
+import symengine
 import numpy as np
 from numpy import sqrt
 from numpy.testing import assert_allclose
+from jitcxde_common import ordered_subs
 
 def perform_step(t,h,f,g,y,I_1,I_11,I_111,I_10):
 	"""
@@ -62,7 +63,8 @@ class sde_integrator(object):
 				g_helpers = (),
 				control_pars = (),
 				seed = None,
-				additive = False
+				additive = False,
+				do_cse = False,
 			):
 		self.state = y
 		self.n = len(self.state)
@@ -76,23 +78,30 @@ class sde_integrator(object):
 		self.additive = additive
 		
 		from jitcsde import t, y
-		Y = sympy.DeferredVector("Y")
-		basic_subs = [(y(i),Y[i]) for i in range(self.n)]
-		f_substitutions = list(reversed(f_helpers)) + basic_subs
-		g_substitutions = list(reversed(g_helpers)) + basic_subs
+		f_subs = list(reversed(f_helpers))
+		g_subs = list(reversed(g_helpers))
+		lambda_args = [t]
+		for i in range(self.n):
+			symbol = symengine.Symbol("dummy_argument_%i"%i)
+			lambda_args.append(symbol)
+			f_subs.append((y(i),symbol))
+			g_subs.append((y(i),symbol))
+		lambda_args.extend(control_pars)
 		
-		f_wc = [ entry.subs(f_substitutions).simplify(ratio=1.0) for entry in f() ]
-		g_wc = [ entry.subs(g_substitutions).simplify(ratio=1.0) for entry in g() ]
+		f_wc = (ordered_subs(entry,f_subs).simplify(ratio=1) for entry in f())
+		g_wc = (ordered_subs(entry,g_subs).simplify(ratio=1) for entry in g())
 		
-		F = sympy.lambdify( [t, Y]+list(control_pars), f_wc )
-		self.f = lambda t,Y: np.array(F(t,Y,*self.parameters)).flatten()
+		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
+		
+		core_f = lambdify(lambda_args,list(f_wc))
+		self.f = lambda t,Y: core_f(np.hstack([t,Y,self.parameters]))
 		
 		if self.additive:
-			G = sympy.lambdify( [t]+list(control_pars), g_wc )
-			self.g = lambda t: np.array(G(t,*self.parameters)).flatten()
+			core_g = lambdify([t]+list(control_pars),list(g_wc))
+			self.g = lambda t: core_g(np.hstack([t,self.parameters]))
 		else:
-			G = sympy.lambdify( [t, Y]+list(control_pars), g_wc )
-			self.g = lambda t,Y: np.array(G(t,Y,*self.parameters)).flatten()
+			core_g = lambdify(lambda_args,list(g_wc))
+			self.g = lambda t,Y: core_g(np.hstack([t,Y,self.parameters]))
 	
 	def set_parameters(self, *parameters):
 		self.parameters = parameters

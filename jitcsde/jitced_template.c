@@ -615,7 +615,6 @@ static PyMethodDef {{module_name}}_methods[] = {
 {NULL, NULL, 0, NULL}
 };
 
-
 static struct PyModuleDef moduledef =
 {
 		PyModuleDef_HEAD_INIT,

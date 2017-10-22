@@ -74,11 +74,11 @@ Taking everything together, our code is:
 if __name__ == "__main__":
 	from jitcsde import y, jitcsde
 	import numpy
-	import sympy
+	import symengine
 	
 	ρ = 28
 	σ = 10
-	β = sympy.Rational(8,3)
+	β = symengine.Rational(8,3)
 	p = 0.1
 	
 	f = [

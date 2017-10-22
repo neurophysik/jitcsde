@@ -9,19 +9,19 @@ from os import path as path
 import shutil
 import random
 import sympy
+import symengine
 import numpy as np
 from jitcxde_common import (
 	jitcxde,
-	handle_input, sort_helpers, sympify_helpers, copy_helpers, filter_helpers,
-	render_and_write_code,
-	collect_arguments,
+	sort_helpers, sympify_helpers, copy_helpers, filter_helpers,
+	collect_arguments, has_function
 	)
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
-y = sympy.Function("y")
+y = symengine.Function("y")
 
 #: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define the an analogous symbol directly with SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities.
-t = sympy.Symbol("t", real=True)
+t = symengine.Symbol("t", real=True)
 
 class UnsuccessfulIntegration(Exception):
 	"""
@@ -75,13 +75,13 @@ class jitcsde(jitcxde):
 		module_location = None
 		):
 		
-		super(jitcsde,self).__init__(verbose,module_location)
+		super(jitcsde,self).__init__(n,verbose,module_location)
 		
 		if f_sym and not g_sym and not module_location:
 			raise ValueError("You gave f_sym as an argument but neither g_sym nor module_location. JiTCSDE cannot properly work with this.")
 		
-		self.f_sym, self.n = handle_input(f_sym,n)
-		self.g_sym, _ = handle_input(g_sym,self.n)
+		self.f_sym = self._handle_input(f_sym)
+		self.g_sym = self._handle_input(g_sym)
 		self.control_pars = control_pars
 		self.integration_parameters_set = False
 		self.SDE = None
@@ -93,8 +93,8 @@ class jitcsde(jitcxde):
 		
 		if additive is None:
 			self.additive = (
-					    all( not entry.has(y)     for entry  in self.g_sym()   )
-					and all( not helper[1].has(y) for helper in self.g_helpers )
+					    all( not has_function(entry    ,y) for entry  in self.g_sym()   )
+					and all( not has_function(helper[1],y) for helper in self.g_helpers )
 					)
 		else:
 			self.additive = additive
@@ -186,7 +186,7 @@ class jitcsde(jitcxde):
 					if argument[0] >= self.n:
 						problem("y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n, i, name))
 				
-				for symbol in entry.atoms(sympy.Symbol):
+				for symbol in entry.atoms(symengine.Symbol):
 					if symbol not in valid_symbols:
 						problem("Invalid symbol (%s) in component %i of %s."  % (symbol.name, i, name))
 		
@@ -304,11 +304,11 @@ class jitcsde(jitcxde):
 				additional_helper = sympy.Function("additional_"+name+"_helper")
 				
 				_cse = sympy.cse(
-						sympy.Matrix(list(wc)),
+						sympy.Matrix(sympy.sympify(list(wc))),
 						symbols = (additional_helper(i) for i in count())
 					)
-				helpers_wc.extend(_cse[0])
-				wc = _cse[1][0]
+				helpers_wc.extend(symengine.sympify(_cse[0]))
+				wc = symengine.sympify(_cse[1][0])
 			
 			arguments = [
 				("self", "sde_integrator * const"),
@@ -318,41 +318,37 @@ class jitcsde(jitcxde):
 				arguments.append(("Y", "double", self.n))
 			
 			functions = ["y"]
-			self.substitutions = [
-					(control_par, sympy.Symbol("self->parameter_"+control_par.name))
+			self.substitutions = {
+					control_par: symengine.Symbol("self->parameter_"+control_par.name)
 					for control_par in self.control_pars
-				]
+				}
 			
 			def finalise(expression):
 				return expression.subs(self.substitutions)
 			
 			if helpers_wc:
 				converted_helpers = []
-				get_helper = sympy.Function("get_"+name+"_helper")
-				set_helper = sympy.Function("set_"+name+"_helper")
+				get_helper = symengine.Function("get_"+name+"_helper")
+				set_helper = symengine.Function("set_"+name+"_helper")
 				
 				for i,helper in enumerate(helpers_wc):
 					converted_helpers.append(set_helper(i, finalise(helper[1])))
-					self.substitutions.append((helper[0], get_helper(i)))
+					self.substitutions[helper[0]] = get_helper(i)
 				
 				extra_arguments = [(name, "double", len(helpers_wc))]
 				functions.extend(["get_"+name+"_helper", "set_"+name+"_helper"])
 				
-				render_and_write_code(
+				self.render_and_write_code(
 					converted_helpers,
-					self._tmpfile,
-					name + "_helpers",
-					functions,
+					name = name + "_helpers",
 					chunk_size = chunk_size,
 					arguments = arguments + extra_arguments
 					)
 			
-			setter = sympy.Function(setter_name)
-			render_and_write_code(
+			setter = symengine.Function(setter_name)
+			self.render_and_write_code(
 				(setter(i,finalise(entry)) for i,entry in enumerate(wc)),
-				self._tmpfile,
-				name,
-				functions = functions+[setter_name],
+				name = name,
 				chunk_size = chunk_size,
 				arguments = arguments
 				)

@@ -31,11 +31,11 @@ See `the sources <https://raw.githubusercontent.com/neurophysik/jitcsde/master/e
 if __name__ == "__main__":
 	from jitcsde import y, jitcsde_jump
 	import numpy
-	import sympy
+	import symengine
 	
 	ρ = 28
 	σ = 10
-	β = sympy.Rational(8,3)
+	β = symengine.Rational(8,3)
 	p = 0.1
 	
 	f = [
