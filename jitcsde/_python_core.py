@@ -27,6 +27,7 @@ def perform_step(t,h,f,g,y,I_1,I_11,I_111,I_10):
 		+ ( -2*I_10 - 2*I_111 ) * g_3
 		+ (           3*I_111 ) * g_4
 		)
+	
 	I_11dbsqh = I_11/sqrt(h)
 	new_y = y + E_N + (1/3)*(
 		fh_1 + 2*fh_2
