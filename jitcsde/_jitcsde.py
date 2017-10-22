@@ -246,8 +246,8 @@ class jitcsde(jitcxde):
 	
 	def compile_C(
 		self,
-		simplify = True,
-		do_cse = True,
+		simplify = False,
+		do_cse = False,
 		numpy_rng = False,
 		chunk_size = 100,
 		extra_compile_args = None,
