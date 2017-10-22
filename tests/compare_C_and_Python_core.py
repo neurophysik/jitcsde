@@ -44,7 +44,7 @@ for additive in [True,False]:
 	if additive:
 		G = [sympy.sympify(i*0.05) for i in range(len(F))]
 	else:
-		g = [ 0.1*y(i) for i in range(len(F)) ]
+		G = [ 0.1*y(i) for i in range(len(F)) ]
 	
 	RNG = Random()
 	

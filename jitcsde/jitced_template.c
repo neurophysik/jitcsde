@@ -396,7 +396,7 @@ static PyObject * get_next_step(sde_integrator * const self, PyObject * args)
 	
 	double g_3[{{n}}];
 	for (int i=0; i<{{n}}; i++)
-		argument[i] = self->state[i] - fh_1[i] - g_1[i]*sqrt(h);
+		argument[i] = self->state[i] + fh_1[i] - g_1[i]*sqrt(h);
 	eval_diffusion(self,self->t+h,argument,g_3);
 	
 	double g_4[{{n}}];
