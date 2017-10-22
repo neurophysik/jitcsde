@@ -55,9 +55,9 @@ class CompareResults(unittest.TestCase):
 		self.test_default()
 		self.SDE.compile_C(simplify=False,extra_compile_args=compile_args)
 	
-	def test_no_cse(self):
+	def test_cse(self):
 		self.test_default()
-		self.SDE.compile_C(do_cse=False,extra_compile_args=compile_args)
+		self.SDE.compile_C(do_cse=True,extra_compile_args=compile_args)
 	
 	def test_save_and_load(self):
 		filename = self.SDE.save_compiled(overwrite=True)
