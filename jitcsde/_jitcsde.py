@@ -11,11 +11,9 @@ import random
 import sympy
 import symengine
 import numpy as np
-from jitcxde_common import (
-	jitcxde,
-	sort_helpers, sympify_helpers, copy_helpers, filter_helpers,
-	collect_arguments, has_function
-	)
+from jitcxde_common import jitcxde
+from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers
+from jitcxde_common.symbolic import collect_arguments, has_function
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
 y = symengine.Function("y")

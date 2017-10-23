@@ -8,7 +8,7 @@ import symengine
 import numpy as np
 from numpy import sqrt
 from numpy.testing import assert_allclose
-from jitcxde_common import ordered_subs
+from jitcxde_common.symbolic import ordered_subs
 
 def perform_step(t,h,f,g,y,I_1,I_11,I_111,I_10):
 	"""
