@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-
 from warnings import warn
 from itertools import count
 from os import path as path
@@ -15,11 +13,11 @@ from jitcxde_common import jitcxde
 from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers
 from jitcxde_common.symbolic import collect_arguments, has_function
 
-#: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
+#: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities.
 y = symengine.Function("y")
 
-#: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define the an analogous symbol directly with SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities.
-t = symengine.Symbol("t", real=True)
+#: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define an analogous symbol directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities.
+t = symengine.Symbol("t",real=True)
 
 class UnsuccessfulIntegration(Exception):
 	"""
@@ -32,14 +30,14 @@ class jitcsde(jitcxde):
 	"""
 	Parameters
 	----------
-	f_sym : iterable of SymPy expressions or generator function yielding SymPy expressions
+	f_sym : iterable of symbolic expressions or generator function yielding symbolic expressions
 		The `i`-th element is the `i`-th component of the value of the SDE’s drift term :math:`f(t,y)`.
 	
-	g_sym : iterable of SymPy expressions or generator function yielding SymPy expressions
+	g_sym : iterable of symbolic expressions or generator function yielding symbolic expressions
 		The `i`-th element is the `i`-th component of the value of the SDE’s diffusion term :math:`g(t,y)`.
 	
-	helpers : list of length-two iterables, each containing a SymPy symbol and a SymPy expression
-		Each helper is a variable that will be calculated before evaluating the drift and diffusion terms and can be used in their computation. The first component of the tuple is the helper’s symbol as referenced in the drift and diffusion terms or other helpers, the second component describes how to compute it from `t`, `y` and other helpers. This is for example useful to realise a mean-field coupling, where the helper could look like `(mean, sympy.Sum(y(i),(i,0,99))/100)`. (See `the JiTCODE documentation <http://jitcode.readthedocs.io/#module-SW_of_Roesslers>`_ for an example.)
+	helpers : list of length-two iterables, each containing a symbol and an expression
+		Each helper is a variable that will be calculated before evaluating the drift and diffusion terms and can be used in their computation. The first component of the tuple is the helper’s symbol as referenced in the drift and diffusion terms or other helpers, the second component describes how to compute it from `t`, `y` and other helpers. This is for example useful to realise a mean-field coupling, where the helper could look like `(mean, sum(y(i) for i in range(100))/100)`. (See `the JiTCODE documentation <http://jitcode.readthedocs.io/#module-SW_of_Roesslers>`_ for an example.)
 	
 	g_helpers : `"auto"` (default), `"same"`, or like `helpers`
 	
@@ -53,7 +51,7 @@ class jitcsde(jitcxde):
 	additive : None or boolean
 		Whether the noise term is additive, i.e., `g_sym` is independent of the state (`y`). In this case a simpler, faster integrator can be used. While JiTCSDE can easily determine this itself (and will, if necessary), this may take some time if `n` is large. If you incorrectly set this to `True`, you will not get a helpful error message.
 	
-	control_pars : list of SymPy symbols
+	control_pars : list of symbols
 		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation with `set_parameters`. Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
 	
 	verbose : boolean
@@ -244,7 +242,7 @@ class jitcsde(jitcxde):
 	
 	def compile_C(
 		self,
-		simplify = False,
+		simplify = None,
 		do_cse = False,
 		numpy_rng = False,
 		chunk_size = 100,
@@ -254,23 +252,23 @@ class jitcsde(jitcxde):
 		modulename = None,
 		):
 		"""
-		translates the derivative to C code using SymPy’s `C-code printer <http://docs.sympy.org/dev/modules/printing.html#module-sympy.printing.ccode>`_.
+		translates the derivative to C code using SymEngine’s `C-code printer <https://github.com/symengine/symengine/pull/1054>`_.
 		For detailed information many of the arguments and other ways to tweak the compilation, read `these notes <jitcde-common.readthedocs.io>`_.
 		
 		Parameters
 		----------
 		simplify : boolean
-			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to disable this is if your derivative is already  optimised and so large that simplifying takes a considerable amount of time.
+			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to disable this is if your derivative is already  optimised and so large that simplifying takes a considerable amount of time. If `None`, this will be automatically disabled for `n>10`.
 		
 		do_cse : boolean
 			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code.
-			It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower). As this requires all entries of `f` and `g` at once, it may void advantages gained from using generator functions as an input.
+			It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower). As this requires all entries of `f` and `g` at once, it may void advantages gained from using generator functions as an input. Also, this feature uses SymPy and not SymEngine.
 		
 		numpy_rng : boolean
 			Whether `numpy.random.normal` shall be explicitly employed for generating random numbers. This is less efficient and mainly exists for testing purposes to ensure that the random numbers are the same as when using the Python backend. Note that the alternative is still based on the same code as NumPy’s random-number generator (until somebody changes it) and should produce the same results. Also note that details in the arithmetic realisation may still cause tiny differences in the results from the two backends, which can then be magnified by the butterfly effect.
 		
 		chunk_size : integer
-			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. After the generation of each chunk, SymPy’s cache is cleared. See `Handling very large differential equations <http://jitcde-common.readthedocs.io/#handling-very-large-differential-equations>`_ on why this is useful and how to best choose this value.
+			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. See `Handling very large differential equations <http://jitcde-common.readthedocs.io/#handling-very-large-differential-equations>`_ on why this is useful and how to best choose this value.
 			If smaller than 1, no chunking will happen.
 		
 		extra_compile_args : iterable of strings
@@ -286,7 +284,10 @@ class jitcsde(jitcxde):
 		
 		self.compile_attempt = False
 		
-		helper_lengths={}
+		if simplify is None:
+			simplify = self.n<=10
+		
+		helper_lengths = dict()
 		
 		for sym,helpers,name,setter_name in [
 				( self.f_sym, self.f_helpers, "f", "set_drift"     ),
