@@ -1,18 +1,10 @@
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wpedantic"
 # define NPY_NO_DEPRECATED_API NPY_1_8_API_VERSION
 # include <Python.h>
 # include <numpy/arrayobject.h>
-# pragma GCC diagnostic pop
-# include <structmember.h>
-
 # include <math.h>
+# include <structmember.h>
 # include <assert.h>
 # include <stdbool.h>
-# include <stdio.h>
-
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-parameter"
 
 # define TYPE_INDEX NPY_DOUBLE
 
@@ -495,13 +487,10 @@ static PyObject * accept_step(sde_integrator * const self)
 static PyObject * get_state(sde_integrator * const self)
 {
 	npy_intp dim[1] = { {{n}} };
-	# pragma GCC diagnostic push
-	# pragma GCC diagnostic ignored "-Wpedantic"
 	return PyArray_NewCopy(
 			(PyArrayObject*) PyArray_SimpleNewFromData(1, dim, TYPE_INDEX, self->state),
 			NPY_ANYORDER
 			);
-	# pragma GCC diagnostic pop
 }
 
 static PyObject * apply_jump(sde_integrator * const self, PyObject * args)
