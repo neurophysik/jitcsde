@@ -2,8 +2,8 @@ from setuptools import setup
 from io import open
 
 requirements = [
-	'jitcxde_common >=0.4, <1',
-	'sympy',
+	'jitcxde_common >=1',
+	'sympy', 'symengine',
 	'numpy'
 ]
 
@@ -14,8 +14,9 @@ setup(
 	author = 'Gerrit Ansmann',
 	author_email = 'gansmann@uni-bonn.de',
 	url = 'http://github.com/neurophysik/jitcdde',
+	python_requires=">=3.3",
 	packages = ['jitcsde'],
-#	package_data = {'jitcsde': ['jitced_template.c']},
+	package_data = {'jitcsde': ['jitced_template.c']},
 	include_package_data = True,
 	install_requires = requirements,
 	setup_requires = ['setuptools_scm'],
