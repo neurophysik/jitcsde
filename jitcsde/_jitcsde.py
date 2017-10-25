@@ -587,7 +587,7 @@ class jitcsde(jitcxde):
 
 class jitcsde_jump(jitcsde):
 	"""
-	An extension of `jitcsde` that can additionally handle random jumps. The handling is the same except for:
+	An extension of `jitcsde` that can additionally handle random jumps. Note that as you are controlling the randomness in these functions, you also have to handle the random seed yourself. The handling is like that of `jitcsde` except for:
 	
 	Parameters
 	----------
