@@ -5,7 +5,6 @@
 Tests several incarnations of the integrator by checking whether the Kramers–Moyal coefficients as estimated from the time series comply with the theoretical expectation. This test produces false negatives from time to time, which is inevitable if we do not want false positives to be too likely. In case of a failure, the specific test is re-run. If the number of re-runs for a specific test or the total number of re-runs are too high, it’s time to worry.
 """
 
-from __future__ import print_function, division
 import numpy as np
 from jitcsde._python_core import sde_integrator
 from jitcsde import jitcsde, t, y

@@ -1,4 +1,3 @@
-from __future__ import division
 from numpy import array
 
 A0 = array([

@@ -7,7 +7,6 @@ Creates instances of the Python and C core for the same SDE and subjects them to
 The argument is the number of runs.
 """
 
-from __future__ import print_function
 from jitcsde._python_core import sde_integrator as py_sde_integrator
 from jitcsde import t, y, jitcsde
 
