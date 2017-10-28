@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from warnings import warn
-from itertools import count
+from itertools import count, chain
 from os import path as path
 import shutil
 import random
@@ -21,9 +21,8 @@ t = symengine.Symbol("t",real=True)
 
 class UnsuccessfulIntegration(Exception):
 	"""
-		This exception is raised when the integrator cannot meet the accuracy and step-size requirements and the argument `raise_exception` of `set_integration_parameters` is set.
+		This exception is raised when the integrator cannot meet the accuracy and step-size requirements. If you want to know the exact state of your system before the integration fails or similar, catch this exception.
 	"""
-	
 	pass
 
 class jitcsde(jitcxde):
@@ -170,9 +169,9 @@ class jitcsde(jitcxde):
 			else:
 				print(message)
 		
-		valid_symbols = [t] + [helper[0] for helper in self.helpers] + list(self.control_pars)
+		valid_symbols = [t] + [helper[0] for helper in chain(self.f_helpers,self.g_helpers)] + list(self.control_pars)
 		
-		for function,name in [(f_sym, "f_sym"), (g_sym, "g_sym")]:
+		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
 			assert function(), "%s is empty." % name
 		
 			for i,entry in enumerate(function()):
@@ -419,8 +418,7 @@ class jitcsde(jitcxde):
 			safety_factor = 0.9,
 			max_factor = 5.0,
 			min_factor = 0.2,
-			raise_exception = True,
-			):
+		):
 		
 		"""
 		Sets the parameters for the step-size adaption.
@@ -454,9 +452,6 @@ class jitcsde(jitcxde):
 		max_factor : float
 		min_factor : float
 			The maximum and minimum factor by which the step size can be adapted in one adaption step.
-		
-		raise_exception : boolean
-			Whether (`UnsuccessfulIntegration`) shall be raised if the integration fails. You can deal with this by catching this exception. If `False`, there is only a warning and `self.successful` is set to `False`.
 		"""
 		
 		if first_step > max_step:
@@ -486,7 +481,6 @@ class jitcsde(jitcxde):
 		self.safety_factor = safety_factor
 		self.max_factor = max_factor
 		self.min_factor = min_factor
-		self.do_raise_exception = raise_exception
 		
 		self.q = 1.5 # TODO
 		
@@ -535,34 +529,25 @@ class jitcsde(jitcxde):
 		Returns
 		-------
 		state : NumPy array
-			the computed state of the system at `target_time`. If the integration fails and `raise_exception` is `False`, the result of the last attempt before failure is returned (which may be blatantly wrong).
+			the computed state of the system at `target_time`.
 		"""
 		self._initiate()
 		last_step = ( self.SDE.t >= target_time )
 		
-		try:
-			while not last_step:
-				if self.SDE.t+self.dt < target_time:
-					actual_dt = self.dt
-				else:
-					actual_dt = target_time - self.SDE.t
-					last_step = True
-				self.SDE.get_next_step(actual_dt)
-				
-				if self._adjust_step_size(actual_dt):
-					self.SDE.accept_step()
-				else:
-					last_step = False
-		
-		except UnsuccessfulIntegration as error:
-			if self.do_raise_exception:
-				raise error
+		while not last_step:
+			if self.SDE.t+self.dt < target_time:
+				actual_dt = self.dt
 			else:
-				warn(str(error))
-				return self.SDE.get_state()
+				actual_dt = target_time - self.SDE.t
+				last_step = True
+			self.SDE.get_next_step(actual_dt)
+			
+			if self._adjust_step_size(actual_dt):
+				self.SDE.accept_step()
+			else:
+				last_step = False
 		
-		else:
-			return self.SDE.get_state()
+		return self.SDE.get_state()
 	
 	def pin_noise(self, number, step_size):
 		"""

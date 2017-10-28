@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.testing.utils import assert_allclose
-from jitcsde import jitcsde, y
+from jitcsde import jitcsde, y, UnsuccessfulIntegration
 import platform
 import symengine
 import unittest
@@ -64,6 +64,7 @@ class CompareResults(unittest.TestCase):
 		self.test_default()
 
 	def tearDown(self):
+		self.SDE.check()
 		new_result = self.SDE.integrate(0.001)
 		self.compare_with_result(new_result)
 
@@ -120,6 +121,43 @@ class TestAdditiveAndFilteredHelpers(TestAdditive):
 	def setUp(self):
 		self.SDE = jitcsde(f_with_helpers,g_add,helpers=helpers,g_helpers="auto")
 
+class TestIntegrationParameters(unittest.TestCase):
+	def setUp(self):
+		self.SDE = jitcsde(f,g)
+		self.SDE.set_initial_value(initial_value,0.0)
+		self.SDE.compile_C(extra_compile_args=compile_args)
+		
+	def test_min_step_error(self):
+		self.SDE.set_integration_parameters(min_step=10.0)
+		with self.assertRaises(UnsuccessfulIntegration):
+			self.SDE.integrate(1000)
+	
+	def test_rtol_error(self):
+		self.SDE.set_integration_parameters(min_step=1e-3, rtol=1e-10, atol=0)
+		with self.assertRaises(UnsuccessfulIntegration):
+			self.SDE.integrate(1000)
+	
+	def test_atol_error(self):
+		self.SDE.set_integration_parameters(min_step=1e-3, rtol=0, atol=1e-10)
+		with self.assertRaises(UnsuccessfulIntegration):
+			self.SDE.integrate(1000)
+
+class TestCheck(unittest.TestCase):
+	def test_check_index_negative(self):
+		SDE = jitcsde([y(0)],[y(-1)])
+		with self.assertRaises(ValueError):
+			SDE.check()
+	
+	def test_check_index_too_high(self):
+		SDE = jitcsde([y(0)],[y(1)])
+		with self.assertRaises(ValueError):
+			SDE.check()
+	
+	def test_check_undefined_variable(self):
+		x = symengine.symbols("x")
+		SDE = jitcsde([y(0)],[x])
+		with self.assertRaises(ValueError):
+			SDE.check()
 
 # Boilerplate
 
