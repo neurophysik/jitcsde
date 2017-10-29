@@ -6,7 +6,6 @@ from itertools import count, chain
 from os import path as path
 import shutil
 import random
-import sympy
 import symengine
 import numpy as np
 from jitcxde_common import jitcxde
@@ -299,6 +298,7 @@ class jitcsde(jitcxde):
 				wc = (entry.simplify(ratio=1.0) for entry in wc)
 			
 			if do_cse:
+				import sympy
 				additional_helper = sympy.Function("additional_"+name+"_helper")
 				
 				_cse = sympy.cse(
