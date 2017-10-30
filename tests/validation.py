@@ -11,11 +11,10 @@ from jitcsde import jitcsde, t, y
 import symengine
 from kmc import KMC
 
-N  = 100000
-kmax = 3
-thresholds = [0.6, 0.6, 0.5, 0.0]
+kmax = 2
+threshold = 0.6
 
-times = lambda dt: np.arange(dt,(N+1)*dt,dt)
+times = lambda dt,N: np.arange(dt,(N+1)*dt,dt)
 
 class KMC_Error(Exception):
 	pass
@@ -34,16 +33,16 @@ scenarios = [
 	]
 
 def test_python_core(
-		scenario,
-		dt = 0.0001,
-		each_step = lambda SDE:0
+			scenario,
+			dt=0.0001, N=10000,
+			each_step = lambda SDE:0
 		):
 	SDE = sde_integrator(
 			lambda:[scenario["F"]],
 			lambda:[scenario["G"]],
 			np.array([0]),
 			additive = scenario["additive"]
-			)
+		)
 	
 	for _ in range(N):
 		each_step(SDE)
@@ -51,53 +50,56 @@ def test_python_core(
 		SDE.accept_step()
 		yield SDE.get_state()[0]
 
-def test_integrator(scenario,dt=0.001,python=False,pin=False):
+def test_integrator(
+			scenario,
+			dt=0.001, N=100000,
+			python=False, pin=False
+		):
 	SDE = jitcsde( [scenario["F"]], [scenario["G"]], verbose=False )
 	SDE.set_initial_value( np.array([0.0]) )
 	
 	if pin:
 		size = np.random.exponential(dt)
-		number = int(times(dt)[-1]/size)
+		number = int(times(dt,N)[-1]/size)
 		SDE.pin_noise(number,size)
 	
-	if python:
-		SDE.generate_lambdas()
-	else:
-		SDE.compile_C()
+	SDE.compile_C()
 	
-	for t in times(dt):
+	for t in times(dt,N):
 		yield SDE.integrate(t)
 
 def cases(scenario):
 	dt = 0.0001
-	yield dt, lambda: test_python_core(scenario, dt), "Python core"
+	yield dt, lambda: test_python_core(scenario,dt=dt), "Python core"
 	
 	# Tests the noise memory by making random request in-between the steps.
 	each_step = lambda SDE: SDE.get_noise(np.random.exponential(dt))
 	yield (
 		dt,
-		lambda: test_python_core(scenario, dt, each_step),
+		lambda: test_python_core(scenario,dt=dt,each_step=each_step),
 		"Python core with additional random noise requests"
 	)
 	
-	for dt in (0.0001,0.0003):
-		for python in (False,True):
-			for pin in (False,True):
-				name = "integrator with dt=%f" % dt
-				name += " and %s" % ("Python" if python else "C")
-				name += " and noise pinning" if pin else ""
-				results = lambda: test_integrator(scenario,dt,python)
-				yield dt, results, name
+	for dt in (0.0001,0.001):
+		for pin in (False,True):
+			name = "integrator with dt=%f" % dt
+			name += " and noise pinning" if pin else ""
+			results = lambda: test_integrator(scenario,dt=dt,pin=pin)
+			yield dt, results, name
 
 def kmc_test(dt, result):
 	Y = symengine.Symbol("Y")
 	F = scenario["F"].subs(y(0),Y)
 	G = scenario["G"].subs(y(0),Y)
+	Fd = F.diff(Y)
+	Gd = G.diff(Y)
+	Fdd = Fd.diff(Y)
+	Gdd = Gd.diff(Y)
 	
 	# Theoretical expectation
 	M = [
-		symengine.Lambdify( Y, F + G*G.diff(Y)/2 ),
-		symengine.Lambdify( Y, G**2 ),
+		symengine.Lambdify( Y, F + (F*Fd+G**2*Fdd)*dt/2 ),
+		symengine.Lambdify( Y, G**2 + (2*F*(F+G*Gd)+G**2*(2*Fd+Gd**2+G*Gdd))*dt/2 ),
 		lambda x: 0,
 		lambda x: 0
 		]
@@ -112,7 +114,7 @@ def kmc_test(dt, result):
 			theory = M[k](X)
 			if value-error < theory < value+error :
 				good += 1
-		if good < thresholds[k]*len(bins):
+		if good < threshold*len(bins):
 			raise KMC_Error
 
 retries = 0
@@ -134,5 +136,5 @@ for scenario in scenarios:
 print("")
 
 if retries:
-	print("Number of reruns: %i. This number should only rarely be larger than 5."% retries)
+	print("Number of reruns: %i. This number should only rarely be larger than 3."% retries)
 
