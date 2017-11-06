@@ -159,10 +159,10 @@ class jitcsde(jitcxde):
 			whether to abort on the first failure. If false, an error is raised only after all problems are printed.
 		"""
 		
-		failed = False
-
+		self.check_failed = False
+		
 		def problem(message):
-			failed = True
+			self.check_failed = True
 			if fail_fast:
 				raise ValueError(message)
 			else:
@@ -184,7 +184,7 @@ class jitcsde(jitcxde):
 					if symbol not in valid_symbols:
 						problem("Invalid symbol (%s) in component %i of %s."  % (symbol.name, i, name))
 		
-		if failed:
+		if self.check_failed:
 			raise ValueError("Check failed.")
 	
 	def reset_integrator(self):

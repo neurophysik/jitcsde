@@ -7,15 +7,17 @@ Creates instances of the Python and C core for the same SDE and subjects them to
 The argument is the number of runs.
 """
 
-from jitcsde._python_core import sde_integrator as py_sde_integrator
-from jitcsde import t, y, jitcsde
+import platform
+from sys import argv
+from random import Random
 
 import symengine
 import numpy as np
 from numpy.testing import assert_allclose
-import platform
-from random import Random
-from sys import argv, stdout
+
+from jitcsde._python_core import sde_integrator as py_sde_integrator
+from jitcsde import y, jitcsde
+
 
 if platform.system() == "Windows":
 	compile_args = None

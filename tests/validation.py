@@ -7,7 +7,7 @@ Tests several incarnations of the integrator by checking whether the Kramers–M
 
 import numpy as np
 from jitcsde._python_core import sde_integrator
-from jitcsde import jitcsde, t, y
+from jitcsde import jitcsde, y
 import symengine
 from kmc import KMC
 
@@ -53,7 +53,7 @@ def test_python_core(
 def test_integrator(
 			scenario,
 			dt=0.001, N=100000,
-			python=False, pin=False
+			pin=False
 		):
 	SDE = jitcsde( [scenario["F"]], [scenario["G"]], verbose=False )
 	SDE.set_initial_value( np.array([0.0]) )
