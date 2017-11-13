@@ -287,10 +287,11 @@ class jitcsde(jitcxde):
 		
 		helper_lengths = dict()
 		
-		for sym,helpers,name,setter_name in [
-				( self.f_sym, self.f_helpers, "f", "set_drift"     ),
-				( self.g_sym, self.g_helpers, "g", "set_diffusion" )
+		for sym,helpers,name,long_name in [
+				( self.f_sym, self.f_helpers, "f", "drift"     ),
+				( self.g_sym, self.g_helpers, "g", "diffusion" )
 				]:
+			setter_name = "set_" + long_name
 			wc = sym()
 			helpers_wc = copy_helpers(helpers)
 			
@@ -311,9 +312,12 @@ class jitcsde(jitcxde):
 			arguments = [
 				("self", "sde_integrator * const"),
 				("t", "double const"),
+				(long_name, "double", self.n),
 				]
 			if name=="g" or not self.additive:
-				arguments.append(("Y", "double", self.n))
+				arguments.append( ("Y", "double", self.n) )
+			if name=="f":
+				arguments.append( ("h", "double") )
 			
 			functions = ["y"]
 			self.substitutions = {
