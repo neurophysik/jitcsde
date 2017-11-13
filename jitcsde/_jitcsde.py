@@ -248,6 +248,7 @@ class jitcsde(jitcxde):
 			extra_link_args = None,
 			verbose = False,
 			modulename = None,
+			omp = False,
 		):
 		"""
 		translates the derivative to C code using SymEngine’s `C-code printer <https://github.com/symengine/symengine/pull/1054>`_.
@@ -365,14 +366,15 @@ class jitcsde(jitcxde):
 			number_of_g_helpers = helper_lengths["g"],
 			control_pars = [par.name for par in self.control_pars],
 			additive = self.additive,
-			numpy_rng = numpy_rng
+			numpy_rng = numpy_rng,
+			chunk_size = chunk_size # only for OMP
 			)
 		
 		if not numpy_rng:
 			rng_file = path.join(path.dirname(__file__),"random_numbers.c")
 			shutil.copy(rng_file,self._tmpfile())
 		
-		self._compile_and_load(verbose,extra_compile_args,extra_link_args)
+		self._compile_and_load(verbose,extra_compile_args,extra_link_args,omp)
 	
 	def _initiate(self):
 		if self.compile_attempt is None:

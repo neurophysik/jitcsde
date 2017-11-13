@@ -129,6 +129,7 @@ void get_gauss(
 			self->noise_size
 		);
 	
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 	{
 		DW[i] = * (double *) PyArray_GETPTR2(noise,i,0);
@@ -184,6 +185,7 @@ void Brownian_bridge(sde_integrator * const self, double const h_need)
 	
 	noise_2->h = h_exc;
 	get_gauss( self, sqrt(factor*h_need), noise_2->DW, noise_2->DZ );
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 	{
 		noise_2->DW[i] += noise_1->DW[i]*factor;
@@ -191,6 +193,7 @@ void Brownian_bridge(sde_integrator * const self, double const h_need)
 	}
 	
 	noise_1->h = h_need;
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 	{
 		noise_1->DW[i] -= noise_2->DW[i];
@@ -215,6 +218,7 @@ void get_noise(
 			if (self->current_noise->h <= h_need)
 			{
 				if (initialised)
+					#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 					for (int i=0; i<{{n}}; i++)
 					{
 						DW_acc[i] += self->current_noise->DW[i];
@@ -223,6 +227,7 @@ void get_noise(
 				else
 				{
 					initialised = true;
+					#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 					for (int i=0; i<{{n}}; i++)
 					{
 						DW_acc[i] = self->current_noise->DW[i];
@@ -239,6 +244,7 @@ void get_noise(
 			append_noise(self, h_need);
 	}
 	if (!initialised)
+		#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 		for (int i=0; i<{{n}}; i++)
 			DW_acc[i] = DZ_acc[i] = 0;
 }
@@ -273,6 +279,7 @@ void get_I(
 {
 	double DZ[{{n}}];
 	get_noise(self, h, DW, DZ);
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 	{
 		{% if not additive %}
@@ -377,25 +384,30 @@ static PyObject * get_next_step(sde_integrator * const self, PyObject * args)
 	eval_diffusion(self,self->t,self->state,g_1);
 	
 	double fh_2[{{n}}];
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 		argument[i] = self->state[i] + 0.75*fh_1[i] + 1.5*g_1[i]*I_10[i]/h;
 	eval_drift(self,self->t+0.75*h,argument,h,fh_2);
 	
 	double g_2[{{n}}];
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 		argument[i] = self->state[i] + 0.25*fh_1[i] + 0.5*g_1[i]*sqrt(h);
 	eval_diffusion(self,self->t+0.25*h,argument,g_2);
 	
 	double g_3[{{n}}];
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 		argument[i] = self->state[i] + fh_1[i] - g_1[i]*sqrt(h);
 	eval_diffusion(self,self->t+h,argument,g_3);
 	
 	double g_4[{{n}}];
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 		argument[i] = self->state[i] + 0.25*fh_1[i] + sqrt(h)*(-5*g_1[i]+3*g_2[i]+0.5*g_3[i]);
 	eval_diffusion(self,self->t+0.25*h,argument,g_4);
 	
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 	{
 		double E_N = (1./h/3.) * (
@@ -427,6 +439,7 @@ static PyObject * get_next_step(sde_integrator * const self, PyObject * args)
 	eval_diffusion(self,self->t+h,g_1);
 	
 	double fh_2[{{n}}];
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 		argument[i] = self->state[i] + 0.75*fh_1[i] + 0.5*g_1[i]*I_10[i]/h;
 	eval_drift(self,self->t+0.75*h,argument,h,fh_2);
@@ -434,6 +447,7 @@ static PyObject * get_next_step(sde_integrator * const self, PyObject * args)
 	double g_2[{{n}}];
 	eval_diffusion(self,self->t,g_2);
 	
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 	{
 		double E_N = I_10[i] /h * (g_2[i]-g_1[i]);
@@ -503,6 +517,7 @@ static PyObject * apply_jump(sde_integrator * const self, PyObject * args)
 		return NULL;
 	}
 	
+	#pragma omp parallel for schedule(dynamic, {{chunk_size}})
 	for (int i=0; i<{{n}}; i++)
 		self->state[i] += * (double *) PyArray_GETPTR1(change,i);
 	
