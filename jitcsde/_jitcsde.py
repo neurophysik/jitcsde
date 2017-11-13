@@ -239,15 +239,15 @@ class jitcsde(jitcxde):
 		self.compile_C()
 	
 	def compile_C(
-		self,
-		simplify = None,
-		do_cse = False,
-		numpy_rng = False,
-		chunk_size = 100,
-		extra_compile_args = None,
-		extra_link_args = None,
-		verbose = False,
-		modulename = None,
+			self,
+			simplify = None,
+			do_cse = False,
+			numpy_rng = False,
+			chunk_size = 100,
+			extra_compile_args = None,
+			extra_link_args = None,
+			verbose = False,
+			modulename = None,
 		):
 		"""
 		translates the derivative to C code using SymEngine’s `C-code printer <https://github.com/symengine/symengine/pull/1054>`_.
@@ -314,7 +314,7 @@ class jitcsde(jitcxde):
 				("t", "double const"),
 				(long_name, "double", self.n),
 				]
-			if name=="g" or not self.additive:
+			if name=="f" or not self.additive:
 				arguments.append( ("Y", "double", self.n) )
 			if name=="f":
 				arguments.append( ("h", "double") )
