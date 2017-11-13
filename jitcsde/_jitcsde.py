@@ -279,6 +279,9 @@ class jitcsde(jitcxde):
 
 		modulename : string or `None`
 			The name used for the compiled module.
+		
+		omp : pair of iterables of strings or boolean
+			What compiler arguments shall be used for multiprocessing (using OpenMP). If `True`, they will be selected automatically. If empty or `False`, no compilation for multiprocessing will happen (unless you supply the relevant compiler arguments otherwise).
 		"""
 		
 		self.compile_attempt = False
