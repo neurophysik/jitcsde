@@ -65,7 +65,7 @@ for additive in [False,True]:
 				)
 		
 		SDE = jitcsde(F,G,additive=additive)
-		SDE.compile_C(extra_compile_args=compile_args)
+		SDE.compile_C(extra_compile_args=compile_args,chunk_size=1)
 		C = SDE.jitced.sde_integrator(0.0,initial_state,seed)
 		
 		def get_next_step():
