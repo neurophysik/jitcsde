@@ -501,10 +501,10 @@ static PyObject * accept_step(sde_integrator * const self)
 static PyObject * get_state(sde_integrator * const self)
 {
 	npy_intp dim[1] = { {{n}} };
-	return PyArray_NewCopy(
-			(PyArrayObject*) PyArray_SimpleNewFromData(1, dim, TYPE_INDEX, self->state),
-			NPY_ANYORDER
-			);
+	PyArrayObject * array = (PyArrayObject*) PyArray_SimpleNewFromData(1, dim, TYPE_INDEX, self->state);
+	PyObject * result = PyArray_NewCopy(array,NPY_ANYORDER);
+	Py_DECREF(array);
+	return result;
 }
 
 static PyObject * apply_jump(sde_integrator * const self, PyObject * args)
