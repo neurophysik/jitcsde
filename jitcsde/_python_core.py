@@ -85,19 +85,19 @@ class sde_integrator(object):
 			g_subs.append((y(i),symbol))
 		lambda_args.extend(control_pars)
 		
-		f_wc = (ordered_subs(entry,f_subs).simplify(ratio=1) for entry in f())
-		g_wc = (ordered_subs(entry,g_subs).simplify(ratio=1) for entry in g())
+		f_wc = list(ordered_subs(entry,f_subs).simplify(ratio=1) for entry in f())
+		g_wc = list(ordered_subs(entry,g_subs).simplify(ratio=1) for entry in g())
 		
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		
-		core_f = lambdify(lambda_args,list(f_wc))
+		core_f = lambdify(lambda_args,f_wc)
 		self.f = lambda t,Y: core_f(np.hstack([t,Y,self.parameters]))
 		
 		if self.additive:
-			core_g = lambdify([t]+list(control_pars),list(g_wc))
+			core_g = lambdify([t]+list(control_pars),g_wc)
 			self.g = lambda t: core_g(np.hstack([t,self.parameters]))
 		else:
-			core_g = lambdify(lambda_args,list(g_wc))
+			core_g = lambdify(lambda_args,g_wc)
 			self.g = lambda t,Y: core_g(np.hstack([t,Y,self.parameters]))
 	
 	def set_parameters(self, *parameters):
