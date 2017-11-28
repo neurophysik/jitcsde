@@ -98,8 +98,8 @@ def kmc_test(dt, result):
 	
 	# Theoretical expectation
 	M = [
-		symengine.Lambdify( Y, F + (F*Fd+G**2*Fdd)*dt/2 ),
-		symengine.Lambdify( Y, G**2 + (2*F*(F+G*Gd)+G**2*(2*Fd+Gd**2+G*Gdd))*dt/2 ),
+		symengine.Lambdify( [Y], F + (F*Fd+G**2*Fdd)*dt/2 ),
+		symengine.Lambdify( [Y], G**2 + (2*F*(F+G*Gd)+G**2*(2*Fd+Gd**2+G*Gdd))*dt/2 ),
 		lambda x: 0,
 		lambda x: 0
 		]

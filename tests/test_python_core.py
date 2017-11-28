@@ -1,6 +1,7 @@
 import numpy as np
 from jitcsde._python_core import sde_integrator
 from numpy.testing import assert_allclose, assert_array_equal
+from symengine import Integer
 import unittest
 
 test_noise = []
@@ -11,10 +12,12 @@ for _ in range(10):
 	])
 max_h = sum(x[0] for x in test_noise)
 
+dummy = lambda:[Integer(0)]
+
 class TestNoiseMemory(unittest.TestCase):
 	@classmethod
 	def setUpClass(self):
-		self.SDE = sde_integrator(lambda:[],lambda:[],[1])
+		self.SDE = sde_integrator(dummy,dummy,[1])
 		self.SDE.noise_dims = 1
 	
 	def setUp(self):
