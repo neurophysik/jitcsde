@@ -8,11 +8,13 @@ If you want to integrate ordinary or delay differential equations, check out
 
 Note that this is work in progress; features and names may change without warning.
 
-* `Documentation <http://jitcsde.readthedocs.io>`_
+* `Documentation <http://jitcsde.readthedocs.io>`_ – Read this to get started and for reference. Don’t miss that some topics ae addressed in the `common JiTC*DE documentation <http://jitcde-common.readthedocs.io>`_.
 
-* `Issue Tracker <http://github.com/neurophysik/jitcsde/issues>`_
+* `Paper <http://arxiv.org/abs/1711.09886>`_ – Read this for the scientific background. Cite this if you wish to give credit or to shift blame. As soon as this is published in a journal, you will find an update here.
 
-* Download from `PyPI <http://pypi.python.org/pypi/jitcode>`_ or just ``pip install jitcsde``.
+* `Issue Tracker <http://github.com/neurophysik/jitcsde/issues>`_ – Please report any bugs here. Also feel free to ask for new features.
+
+* `Installation instructions <http://jitcde-common.readthedocs.io/#installation>`_ (or just ``pip install jitcdde``).
 
 This work was supported by the Volkswagen Foundation (Grant No. 88463).
 
