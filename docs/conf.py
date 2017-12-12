@@ -6,6 +6,7 @@ from setuptools_scm import get_version
 # Mocking to make RTD autobuild the documentation.
 autodoc_mock_imports = [
 		'numpy', 'numpy.testing', 'numpy.random',
+		'symengine',
 		'jitcxde_common.helpers','jitcxde_common.symbolic'
 	]
 
