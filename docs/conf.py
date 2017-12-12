@@ -5,7 +5,8 @@ from setuptools_scm import get_version
 
 # Mocking to make RTD autobuild the documentation.
 autodoc_mock_imports = [
-	'numpy', 'numpy.testing', 'numpy.random',
+		'numpy', 'numpy.testing', 'numpy.random',
+		'jitcxde_common.helpers','jitcxde_common.symbolic'
 	]
 
 sys.path.insert(0,os.path.abspath("../examples"))
