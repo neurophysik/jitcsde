@@ -14,7 +14,7 @@ Note that this is work in progress; features and names may change without warnin
 
 * `Issue Tracker <http://github.com/neurophysik/jitcsde/issues>`_ – Please report any bugs here. Also feel free to ask for new features.
 
-* `Installation instructions <http://jitcde-common.readthedocs.io/#installation>`_. Note that just installing from GitHub will most likely fail.
+* `Installation instructions <http://jitcde-common.readthedocs.io/#installation>`_. In most cases, `pip3 install jitcode` or similar should do the job.
 
 This work was supported by the Volkswagen Foundation (Grant No. 88463).
 
