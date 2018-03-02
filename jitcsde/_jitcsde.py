@@ -49,6 +49,10 @@ class jitcsde(jitcxde):
 	additive : None or boolean
 		Whether the noise term is additive, i.e., `g_sym` is independent of the state (`y`). In this case a simpler, faster integrator can be used. While JiTCSDE can easily determine this itself (and will, if necessary), this may take some time if `n` is large. If you incorrectly set this to `True`, you will not get a helpful error message.
 	
+	ito : boolean
+		Whether the SDE is formulated in Itō or Stratonovitch calculus.
+		In the latter case, the SDE will be converted to Itō calculus, as this is what is required by the integrator.
+	
 	control_pars : list of symbols
 		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation with `set_parameters`. Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
 	
@@ -60,13 +64,14 @@ class jitcsde(jitcxde):
 	"""
 	
 	def __init__( self,
-		f_sym = (), g_sym = (),
-		helpers = None, g_helpers = "auto",
-		n = None,
-		additive = None,
-		control_pars = (),
-		verbose = True,
-		module_location = None
+			f_sym = (), g_sym = (),
+			helpers = None, g_helpers = "auto",
+			n = None,
+			additive = None,
+			ito = True,
+			control_pars = (),
+			verbose = True,
+			module_location = None
 		):
 		
 		super(jitcsde,self).__init__(n,verbose,module_location)
@@ -76,6 +81,13 @@ class jitcsde(jitcxde):
 		
 		self.f_sym = self._handle_input(f_sym)
 		self.g_sym = self._handle_input(g_sym)
+		self.helpers = helpers
+		self.g_helpers = g_helpers
+		
+		self._arrange_helpers()
+		if not ito:
+			self._stratonovich_to_ito()
+		
 		self.control_pars = control_pars
 		self.integration_parameters_set = False
 		self.SDE = None
@@ -83,36 +95,37 @@ class jitcsde(jitcxde):
 		self._y = None
 		self._t = None
 		
-		self._arrange_helpers(helpers,g_helpers)
-		
 		if additive is None:
 			self.additive = (
 					    all( not has_function(entry    ,y) for entry  in self.g_sym()   )
-					and all( not has_function(helper[1],y) for helper in self.g_helpers )
+					and all( not has_function(helper[1],y) for helper in self._g_helpers )
 					)
 		else:
 			self.additive = additive
 	
-	def _arrange_helpers(self, helpers, g_helpers):
+	def _stratonovich_to_ito(self):
+		raise NotImplementedError
+	
+	def _arrange_helpers(self):
 		"""
 		Splits helpers into those needed by f and those needed by g.
 		"""
-		helpers = sort_helpers(sympify_helpers(helpers or []))
+		helpers = sort_helpers(sympify_helpers(self.helpers or []))
 		
-		if g_helpers=="auto":
+		if self.g_helpers=="auto":
 			f_needed = set().union(*(entry.free_symbols for entry in self.f_sym()))
 			g_needed = set().union(*(entry.free_symbols for entry in self.g_sym()))
 			
-			self.f_helpers = filter_helpers(helpers, f_needed)
-			self.g_helpers = filter_helpers(helpers, g_needed)
+			self._f_helpers = filter_helpers(helpers, f_needed)
+			self._g_helpers = filter_helpers(helpers, g_needed)
 		
 		else:
-			self.f_helpers = helpers
-			if g_helpers=="same":
-				self.g_helpers = copy_helpers(helpers)
+			self._f_helpers = helpers
+			if self.g_helpers=="same":
+				self._g_helpers = copy_helpers(helpers)
 			else:
-				self.g_helpers = sort_helpers(sympify_helpers(g_helpers or []))
-
+				self._g_helpers = sort_helpers(sympify_helpers(self.g_helpers or []))
+	
 	@property
 	def y(self):
 		if self.SDE:
@@ -168,7 +181,7 @@ class jitcsde(jitcxde):
 			else:
 				print(message)
 		
-		valid_symbols = [t] + [helper[0] for helper in chain(self.f_helpers,self.g_helpers)] + list(self.control_pars)
+		valid_symbols = [t] + [helper[0] for helper in chain(self._f_helpers,self._g_helpers)] + list(self.control_pars)
 		
 		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
 			assert function(), "%s is empty." % name
@@ -228,7 +241,7 @@ class jitcsde(jitcxde):
 			self.f_sym, self.g_sym,
 			self.y,
 			self.t,
-			self.f_helpers, self.g_helpers,
+			self._f_helpers, self._g_helpers,
 			self.control_pars,
 			self.seed,
 			self.additive
@@ -292,8 +305,8 @@ class jitcsde(jitcxde):
 		helper_lengths = dict()
 		
 		for sym,helpers,name,long_name in [
-				( self.f_sym, self.f_helpers, "f", "drift"     ),
-				( self.g_sym, self.g_helpers, "g", "diffusion" )
+				( self.f_sym, self._f_helpers, "f", "drift"     ),
+				( self.g_sym, self._g_helpers, "g", "diffusion" )
 				]:
 			setter_name = "set_" + long_name
 			wc = sym()
