@@ -109,8 +109,8 @@ class jitcsde(jitcxde):
 			self.additive = additive
 	
 	def _stratonovich_to_ito(self):
-		dependent_helpers = [[] for i in range(n)]
-		for i in range(n):
+		dependent_helpers = [[] for i in range(self.n)]
+		for i in range(self.n):
 			for helper in self._g_helpers:
 				derivative = helper[1].diff(y(i))
 				for other_helper in dependent_helpers[i]:
@@ -120,10 +120,10 @@ class jitcsde(jitcxde):
 		
 		f_sym = list(self.f_sym())
 		for i,g_entry in enumerate(self.g_sym()):
-			g_diff = g_entry.diff(y(j))
-			for helper in dependent_helpers[j]:
+			g_diff = g_entry.diff(y(i))
+			for helper in dependent_helpers[i]:
 				g_diff += g_entry.diff(helper[0]) * helper[1]
-			f_sym[i] += g_entry * g_entry_diff / 2
+			f_sym[i] += g_entry * g_diff / 2
 		self.f_sym = lambda: f_sym
 		
 		if self.g_helpers != "same" and self._g_helpers:
