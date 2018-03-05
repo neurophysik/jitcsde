@@ -30,7 +30,8 @@ class CompareResults(unittest.TestCase):
 			assert_allclose(
 					result-initial_value,
 					new_result-initial_value,
-					rtol=1e-3)
+					rtol=1e-3
+				)
 	
 	def setUp(self):
 		self.SDE = jitcsde(f,g)
@@ -93,6 +94,22 @@ class TestAutofilteringHelpers(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_with_helpers,g_with_helpers,helpers=helpers,g_helpers="auto")
 
+# Stratonovich
+f_strat_with_helpers = [polynome - g_with_helpers[0]*5*exp_term*(-2*state+1)]
+f_strat_helpers = helpers
+
+class TestStrat(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_strat_with_helpers,g_with_helpers,helpers=helpers,g_helpers="same",ito=False)
+
+class TestStratPrefilteredHelpers(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_strat_with_helpers,g_with_helpers,helpers=f_strat_helpers,g_helpers=g_helpers,ito=False)
+
+class TestStratAutofilteringHelpers(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_strat_with_helpers,g_with_helpers,helpers=helpers,g_helpers="auto",ito=False)
+
 
 # Additive Noise
 
@@ -121,6 +138,9 @@ class TestAdditiveAndHelpers(TestAdditive):
 class TestAdditiveAndFilteredHelpers(TestAdditive):
 	def setUp(self):
 		self.SDE = jitcsde(f_with_helpers,g_add,helpers=helpers,g_helpers="auto")
+		assert(self.SDE.additive)
+
+# Other tests
 
 class TestIntegrationParameters(unittest.TestCase):
 	def setUp(self):
