@@ -112,6 +112,7 @@ class TestAdditive(CompareResults):
 	
 	def setUp(self):
 		self.SDE = jitcsde(f,g_add)
+		assert(self.SDE.additive)
 
 class TestAdditiveAndHelpers(TestAdditive):
 	def setUp(self):
