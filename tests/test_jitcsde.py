@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing.utils import assert_allclose
 from jitcsde import jitcsde, y, UnsuccessfulIntegration
 import platform
-import symengine
+from symengine import symbols, exp
 import unittest
 
 if platform.system() == "Windows":
@@ -14,7 +14,7 @@ else:
 # Ensures that all kinds of formatting the input actually work and produce the same result. The correctness of this result itself is checked in validation_test.py.
 
 f = [-y(0)**3 + 4*y(0) + y(0)**2]
-g = [5*symengine.exp(-y(0)**2+y(0)-1.5) + 3.0]
+g = [5*exp(-y(0)**2+y(0)-1.5) + 3.0]
 initial_value = np.array([1.0])
 
 # Normal noise
@@ -69,13 +69,13 @@ class CompareResults(unittest.TestCase):
 		new_result = self.SDE.integrate(0.001)
 		self.compare_with_result(new_result)
 
-y2_m_y, state, exp_term, polynome = symengine.symbols("y2_m_y, state, exp_term, polynome")
+y2_m_y, state, exp_term, polynome = symbols("y2_m_y, state, exp_term, polynome")
 
 helpers = [
-	(state, y(0)),
-	(y2_m_y, state**2-state),
-	(polynome, -state**3 + 5*state + y2_m_y),
-	(exp_term, symengine.exp(-y2_m_y-1.5)),
+		(state, y(0)),
+		(y2_m_y, state**2-state),
+		(polynome, -state**3 + 5*state + y2_m_y),
+		(exp_term, exp(-y2_m_y-1.5)),
 	]
 f_helpers = [helpers[i] for i in (0,1,2)]
 g_helpers = [helpers[i] for i in (0,1,3)]
@@ -95,8 +95,7 @@ class TestAutofilteringHelpers(CompareResults):
 		self.SDE = jitcsde(f_with_helpers,g_with_helpers,helpers=helpers,g_helpers="auto")
 
 # Stratonovich
-f_strat_with_helpers = [polynome - g_with_helpers[0]*5*exp_term*(-2*state+1)]
-f_strat_helpers = helpers
+f_strat_with_helpers = [polynome - 5*exp(-1.5-y2_m_y)*(1-2*state)*(3.0+5*exp(-1.5-y2_m_y))/2]
 
 class TestStrat(CompareResults):
 	def setUp(self):
@@ -104,7 +103,7 @@ class TestStrat(CompareResults):
 
 class TestStratPrefilteredHelpers(CompareResults):
 	def setUp(self):
-		self.SDE = jitcsde(f_strat_with_helpers,g_with_helpers,helpers=f_strat_helpers,g_helpers=g_helpers,ito=False)
+		self.SDE = jitcsde(f_strat_with_helpers,g_with_helpers,helpers=f_helpers,g_helpers=g_helpers,ito=False)
 
 class TestStratAutofilteringHelpers(CompareResults):
 	def setUp(self):
@@ -175,7 +174,7 @@ class TestCheck(unittest.TestCase):
 			SDE.check()
 	
 	def test_check_undefined_variable(self):
-		x = symengine.symbols("x")
+		x = symbols("x")
 		SDE = jitcsde([y(0)],[x])
 		with self.assertRaises(ValueError):
 			SDE.check()
