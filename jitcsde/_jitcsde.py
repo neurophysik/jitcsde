@@ -9,7 +9,7 @@ import random
 import symengine
 import numpy as np
 from jitcxde_common import jitcxde
-from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers
+from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers, find_dependent_helpers
 from jitcxde_common.symbolic import collect_arguments, has_function
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities.
@@ -115,14 +115,10 @@ class jitcsde(jitcxde):
 		else:
 			self.itoed = True
 		
-		dependent_helpers = [[] for i in range(self.n)]
-		for i in range(self.n):
-			for helper in self._g_helpers:
-				derivative = helper[1].diff(y(i))
-				for other_helper in dependent_helpers[i]:
-					derivative += helper[1].diff(other_helper[0]) * other_helper[1]
-				if derivative:
-					dependent_helpers[i].append( (helper[0], derivative) )
+		dependent_helpers = [
+				find_dependent_helpers(self._g_helpers,y(i))
+				for i in range(self.n)
+			]
 		
 		f_sym = list(self.f_sym())
 		for i,g_entry in enumerate(self.g_sym()):
