@@ -52,6 +52,7 @@ class jitcsde(jitcxde):
 	ito : boolean
 		Whether the SDE is formulated in Itō or Stratonovitch calculus.
 		In the latter case, the SDE will be converted to Itō calculus, as this is what is required by the integrator.
+		Note that is conversion may be inefficient for large differential equations with helpers.
 	
 	control_pars : list of symbols
 		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation with `set_parameters`. Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
@@ -109,6 +110,11 @@ class jitcsde(jitcxde):
 			self.additive = additive
 	
 	def _stratonovich_to_ito(self):
+		if hasattr(self,"itoed"):
+			raise AssertionError
+		else:
+			self.itoed = True
+		
 		dependent_helpers = [[] for i in range(self.n)]
 		for i in range(self.n):
 			for helper in self._g_helpers:
@@ -124,9 +130,16 @@ class jitcsde(jitcxde):
 			for helper in dependent_helpers[i]:
 				g_diff += g_entry.diff(helper[0]) * helper[1]
 			f_sym[i] += g_entry * g_diff / 2
-		self.f_sym = lambda: f_sym
+		self.f_sym = lambda: (entry.simplify() for entry in f_sym)
 		
-		if self.g_helpers != "same" and self._g_helpers:
+		if self.g_helpers == "same" or not self.g_helpers:
+			pass
+		elif self.g_helpers == "auto":
+			self._arrange_helpers()
+		elif self.g_helpers != "same":
+			for g_helper in self.g_helpers:
+				if not any(g_helper[0]==f_helper[0] for f_helper in self.helpers):
+					self.helpers.append(g_helper)
 			self._arrange_helpers()
 	
 	def _arrange_helpers(self):
@@ -139,8 +152,8 @@ class jitcsde(jitcxde):
 			f_needed = set().union(*(entry.free_symbols for entry in self.f_sym()))
 			g_needed = set().union(*(entry.free_symbols for entry in self.g_sym()))
 			
-			self._f_helpers = filter_helpers(helpers, f_needed)
-			self._g_helpers = filter_helpers(helpers, g_needed)
+			self._f_helpers = filter_helpers(helpers,f_needed)
+			self._g_helpers = filter_helpers(helpers,g_needed)
 		
 		else:
 			self._f_helpers = helpers
