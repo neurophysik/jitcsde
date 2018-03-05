@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing.utils import assert_allclose
 from jitcsde import jitcsde, y, UnsuccessfulIntegration
 import platform
-from symengine import symbols, exp
+from symengine import symbols, exp, Rational
 import unittest
 
 if platform.system() == "Windows":
@@ -14,7 +14,7 @@ else:
 # Ensures that all kinds of formatting the input actually work and produce the same result. The correctness of this result itself is checked in validation_test.py.
 
 f = [-y(0)**3 + 4*y(0) + y(0)**2]
-g = [5*exp(-y(0)**2+y(0)-1.5) + 3.0]
+g = [5*exp(-y(0)**2+y(0)-Rational(3,2)) + 3]
 initial_value = np.array([1.0])
 
 # Normal noise
@@ -75,12 +75,12 @@ helpers = [
 		(state, y(0)),
 		(y2_m_y, state**2-state),
 		(polynome, -state**3 + 5*state + y2_m_y),
-		(exp_term, exp(-y2_m_y-1.5)),
+		(exp_term, exp(-y2_m_y-Rational(3,2))),
 	]
 f_helpers = [helpers[i] for i in (0,1,2)]
 g_helpers = [helpers[i] for i in (0,1,3)]
 f_with_helpers = [polynome]
-g_with_helpers = [5*exp_term + 3.0]
+g_with_helpers = [5*exp_term + 3]
 
 class TestHelpers(CompareResults):
 	def setUp(self):
@@ -95,9 +95,17 @@ class TestAutofilteringHelpers(CompareResults):
 		self.SDE = jitcsde(f_with_helpers,g_with_helpers,helpers=helpers,g_helpers="auto")
 
 # Stratonovich
-f_strat_with_helpers = [polynome - 5*exp(-1.5-y2_m_y)*(1-2*state)*(3.0+5*exp(-1.5-y2_m_y))/2]
+f_strat = [
+		5/2*exp(-3/2-y(0)**2+y(0))*(2*y(0)-1)*(3+5*exp(-3/2-y(0)**2+y(0)))
+		+ y(0)**2 - y(0)**3 + 4*y(0)
+	]
+f_strat_with_helpers = [polynome - 5*exp(-Rational(3,2)-y2_m_y)*(1-2*state)*(3+5*exp(-Rational(3,2)-y2_m_y))/2]
 
 class TestStrat(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_strat,g,ito=False)
+
+class TestStratHelpers(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_strat_with_helpers,g_with_helpers,helpers=helpers,g_helpers="same",ito=False)
 
