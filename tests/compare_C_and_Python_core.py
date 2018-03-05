@@ -25,7 +25,7 @@ else:
 	from jitcxde_common import DEFAULT_COMPILE_ARGS
 	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG","-O0"]
 
-def compare(x,y,rtol=1e-5,atol=1e-5):
+def compare(x,y,rtol=1e-4,atol=1e-4):
 	try:
 		assert_allclose(x,y,rtol=rtol,atol=atol)
 	except AssertionError as error:
