@@ -111,20 +111,15 @@ class jitcsde(jitcxde):
 	
 	def _stratonovich_to_ito(self):
 		if hasattr(self,"itoed"):
-			raise AssertionError
+			raise AssertionError("_stratonovich_to_ito must not be called twice.")
 		else:
 			self.itoed = True
-		
-		dependent_helpers = [
-				find_dependent_helpers(self._g_helpers,y(i))
-				for i in range(self.n)
-			]
 		
 		# The actual conversion.
 		f_sym = list(self.f_sym())
 		for i,g_entry in enumerate(self.g_sym()):
 			g_diff = g_entry.diff(y(i))
-			for helper in dependent_helpers[i]:
+			for helper in find_dependent_helpers(self._g_helpers,y(i)):
 				g_diff += g_entry.diff(helper[0]) * helper[1]
 			f_sym[i] += g_entry * g_diff / 2
 		self.f_sym = lambda: f_sym
