@@ -85,8 +85,12 @@ class jitcsde(jitcxde):
 		self.g_helpers = g_helpers
 		
 		self._arrange_helpers()
+		self._determine_additivity(additive)
 		if not ito:
-			self._stratonovich_to_ito()
+			if self.additive:
+				warn("No need for conversion from Stratonovich to Itō for additive SDE.")
+			else:
+				self._stratonovich_to_ito()
 		
 		self.control_pars = control_pars
 		self.integration_parameters_set = False
@@ -94,17 +98,36 @@ class jitcsde(jitcxde):
 		self.seed = None
 		self._y = None
 		self._t = None
-		
+	
+	def _determine_additivity(self,additive):
 		if additive is None:
 			self.additive = (
-					    all( not has_function(entry    ,y) for entry  in self.g_sym()   )
+					    all( not has_function(entry    ,y) for entry  in self.g_sym()    )
 					and all( not has_function(helper[1],y) for helper in self._g_helpers )
 					)
 		else:
 			self.additive = additive
 	
 	def _stratonovich_to_ito(self):
-		raise NotImplementedError
+		dependent_helpers = [[] for i in range(n)]
+		for i in range(n):
+			for helper in self._g_helpers:
+				derivative = helper[1].diff(y(i))
+				for other_helper in dependent_helpers[i]:
+					derivative += helper[1].diff(other_helper[0]) * other_helper[1]
+				if derivative:
+					dependent_helpers[i].append( (helper[0], derivative) )
+		
+		f_sym = list(self.f_sym())
+		for i,g_entry in enumerate(self.g_sym()):
+			g_diff = g_entry.diff(y(j))
+			for helper in dependent_helpers[j]:
+				g_diff += g_entry.diff(helper[0]) * helper[1]
+			f_sym[i] += g_entry * g_entry_diff / 2
+		self.f_sym = lambda: f_sym
+		
+		if self.g_helpers != "same" and self._g_helpers:
+			self._arrange_helpers()
 	
 	def _arrange_helpers(self):
 		"""
