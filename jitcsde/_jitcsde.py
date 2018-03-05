@@ -120,14 +120,16 @@ class jitcsde(jitcxde):
 				for i in range(self.n)
 			]
 		
+		# The actual conversion.
 		f_sym = list(self.f_sym())
 		for i,g_entry in enumerate(self.g_sym()):
 			g_diff = g_entry.diff(y(i))
 			for helper in dependent_helpers[i]:
 				g_diff += g_entry.diff(helper[0]) * helper[1]
 			f_sym[i] += g_entry * g_diff / 2
-		self.f_sym = lambda: (entry.simplify() for entry in f_sym)
+		self.f_sym = lambda: f_sym
 		
+		# Rearrange helpers if necessary
 		if self.g_helpers == "same" or not self.g_helpers:
 			pass
 		elif self.g_helpers == "auto":
