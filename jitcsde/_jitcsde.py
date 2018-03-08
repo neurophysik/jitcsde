@@ -634,9 +634,12 @@ class jitcsde_jump(jitcsde):
 	
 	jump : callable `jump(time,state)` returning an array of size `n`.
 		A function (or similar) that returns the actual jump.
+		This must be an array, even if your system is one-dimensional.
 	"""
 	
 	def __init__( self, IJI, amp, *args, **kwargs ):
+		if not kwargs.pop("ito",True):
+			raise NotImplementedError("I don’t know how to convert jumpy Stratonovich SDEs to Itō SDEs – nobody does.")
 		super(jitcsde_jump,self).__init__(*args, **kwargs)
 		self.IJI = IJI
 		self.amp = amp

@@ -5,7 +5,7 @@ Introduction
 ------------
 
 JiTCSDE (just-in-time compilation for stochastic differential equations) is a standalone Python implementation of the adaptive integration method proposed by Rackauckas and Nie [RN17]_, which in turn employs Rößler-type stochastic Runge–Kutta methods [R10]_.
-It can take both Itō and Stratonovich SDEs, converting the latter internally.
+It can handle both Itō and Stratonovich SDEs, converting the latter internally.
 JiTCSDE is designed in analogy to `JiTCODE`_ (which is handled very similarly to `SciPy’s ODE`_ (`scipy.integrate.ode`)):
 It takes iterables (or generator functions) of symbolic expressions, translates them to C code, compiles them and an integrator wrapped around them on the fly, and allows you to operate this integrator from Python.
 Symbolic expressions are mostly handled by `SymEngine`_, `SymPy`_’s compiled-backend-to-be (see `SymPy vs. SymEngine`_ for details).
@@ -61,6 +61,7 @@ It draws the waiting time between jumps as well as the value of the jump from a 
 The jumps are positioned precisely, i.e., the dynamics is integrated up to the time of a jump, the jump is applied, and the integration is continued afterwards.
 
 Note that this functionality is implemented purely in Python, which makes it very flexible, but may also slows things down when the jump rate is high in comparison to the integration step (not to be confused with the sampling step), which however should not occur in typical applications.
+Also note that this only works for Itō SDEs.
 
 .. automodule:: noisy_and_jumpy_lorenz
 
