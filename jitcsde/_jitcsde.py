@@ -212,7 +212,7 @@ class jitcsde(jitcxde):
 	
 	def reset_integrator(self):
 		"""
-		Resets the integrator, forgetting all stored noise (and waiting times for `jitcsde_jump` and forcing re-initiation when it is needed next.
+		Resets the integrator, forgetting all stored noise (and waiting times for `jitcsde_jump`) and forcing re-initiation when it is needed next.
 		"""
 		self.SDE = None
 	
