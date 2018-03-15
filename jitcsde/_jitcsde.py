@@ -8,7 +8,7 @@ import shutil
 import random
 import symengine
 import numpy as np
-from jitcxde_common import jitcxde
+from jitcxde_common import jitcxde, check
 from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers, find_dependent_helpers
 from jitcxde_common.symbolic import collect_arguments, has_function
 
@@ -68,8 +68,7 @@ class jitcsde(jitcxde):
 			f_sym = (), g_sym = (),
 			helpers = None, g_helpers = "auto",
 			n = None,
-			additive = None,
-			ito = True,
+			additive = None, ito = True,
 			control_pars = (),
 			verbose = True,
 			module_location = None
@@ -185,49 +184,31 @@ class jitcsde(jitcxde):
 		self._t = value
 		self.reset_integrator()
 	
-	def check(self, fail_fast=True):
-		"""
-		Checks for the following mistakes:
-		
-		* negative arguments of `y`
-		* arguments of `y` that are higher than the system’s dimension `n`
-		* unused variables
-		
-		For large systems, this may take some time (which is why it is not run by default).
-		
-		Parameters
-		----------
-		fail_fast : boolean
-			whether to abort on the first failure. If false, an error is raised only after all problems are printed.
-		"""
-		
-		self.check_failed = False
-		
-		def problem(message):
-			self.check_failed = True
-			if fail_fast:
-				raise ValueError(message)
-			else:
-				print(message)
-		
-		valid_symbols = [t] + [helper[0] for helper in chain(self._f_helpers,self._g_helpers)] + list(self.control_pars)
-		
+	@check
+	def _check_non_empty(self):
 		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
-			assert function(), "%s is empty." % name
+			if not function():
+				self._fail_check("%s is empty." % name)
 		
+	@check
+	def _check_valid_arguments(self):
+		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
 			for i,entry in enumerate(function()):
 				for argument in collect_arguments(entry,y):
 					if argument[0] < 0:
-						problem("y is called with a negative argument (%i) in component %i of %s." % (argument[0], i, name))
+						self._fail_check("y is called with a negative argument (%i) in component %i of %s." % (argument[0], i, name))
 					if argument[0] >= self.n:
-						problem("y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n, i, name))
-				
+						self._fail_check("y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n, i, name))
+	
+	@check
+	def _check_valid_symbols(self):
+		valid_symbols = [t] + [helper[0] for helper in chain(self._f_helpers,self._g_helpers)] + list(self.control_pars)
+		
+		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
+			for i,entry in enumerate(function()):
 				for symbol in entry.atoms(symengine.Symbol):
 					if symbol not in valid_symbols:
-						problem("Invalid symbol (%s) in component %i of %s."  % (symbol.name, i, name))
-		
-		if self.check_failed:
-			raise ValueError("Check failed.")
+						self._fail_check("Invalid symbol (%s) in component %i of %s."  % (symbol.name, i, name))
 	
 	def reset_integrator(self):
 		"""
