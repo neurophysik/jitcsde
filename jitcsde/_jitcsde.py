@@ -613,7 +613,7 @@ class jitcsde_jump(jitcsde):
 	IJI : callable `IJI(time,state)` returning a non-negative number
 		A function (or similar) that returns a waiting time for the next jump, i.e., that draws one value from the inter-jump-interval distribution. A new waiting time using this function is determined directly after each jump (and at the first call of `integrate`). Hence, only the state and time at those times affect the waiting time, if you choose it to be time- or state-dependent.
 	
-	jump : callable `jump(time,state)` returning an array of size `n`.
+	amp : callable `amp(time,state)` returning an array of size `n`.
 		A function (or similar) that returns the actual jump.
 		This must be a NumPy array, even if your system is one-dimensional.
 	"""
