@@ -513,7 +513,7 @@ static PyObject * apply_jump(sde_integrator * const self, PyObject * args)
 	
 	if (!PyArg_ParseTuple(args,"O!",&PyArray_Type,&change))
 	{
-		PyErr_SetString(PyExc_ValueError,"Wrong input.");
+		PyErr_SetString(PyExc_ValueError,"Wrong input. Note that the function returning jumps must return a NumPy array.");
 		return NULL;
 	}
 	

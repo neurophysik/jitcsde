@@ -615,7 +615,7 @@ class jitcsde_jump(jitcsde):
 	
 	jump : callable `jump(time,state)` returning an array of size `n`.
 		A function (or similar) that returns the actual jump.
-		This must be an array, even if your system is one-dimensional.
+		This must be a NumPy array, even if your system is one-dimensional.
 	"""
 	
 	def __init__( self, IJI, amp, *args, **kwargs ):
