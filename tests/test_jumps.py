@@ -80,8 +80,14 @@ class TestCheck(unittest.TestCase):
 		with self.assertRaises(ValueError):
 			SDE.check()
 	
-	def test_wrong_amp_output(self):
+	def test_wrong_amp_output_type(self):
 		amp = lambda t,y: 1
+		SDE = jitcsde_jump( IJI, amp, f, g )
+		with self.assertRaises(ValueError):
+			SDE.check()
+	
+	def test_wrong_amp_output_size(self):
+		amp = lambda t,y: np.array([1,2])
 		SDE = jitcsde_jump( IJI, amp, f, g )
 		with self.assertRaises(ValueError):
 			SDE.check()
