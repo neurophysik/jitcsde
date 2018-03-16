@@ -186,6 +186,8 @@ class TestCheck(unittest.TestCase):
 		SDE = jitcsde([y(0)],[x])
 		with self.assertRaises(ValueError):
 			SDE.check()
+	
+	
 
 # Boilerplate
 

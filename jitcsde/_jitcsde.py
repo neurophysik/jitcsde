@@ -645,4 +645,16 @@ class jitcsde_jump(jitcsde):
 			self._next_jump = self.t + self.IJI(time,self.y)
 		
 		return super(jitcsde_jump,self).integrate(target_time)
+	
+	@check
+	def check_jump_function(self):
+		output = self.amp(
+				self.t or 0.0,
+				self.y or np.random.random(self.n)
+			)
+		
+		if not isinstance(output,np.ndarray):
+			self._fail_check("Output of amp function is not an array")
+		if output.size != self.n:
+			self._fail_check("Output of amp function has the wrong dimension")
 
