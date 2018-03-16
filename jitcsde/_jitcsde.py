@@ -653,7 +653,7 @@ class jitcsde_jump(jitcsde):
 	
 	def check(self, fail_fast=True):
 		"""
-			Same as jitcsde’s check, but additionally checks the output of amp function.
+			Same as jitcsde’s check, but additionally checks the output of the amp function (by calling it).
 		"""
 		super(jitcsde_jump,self).check(fail_fast)
 	
