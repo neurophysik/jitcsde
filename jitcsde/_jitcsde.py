@@ -8,7 +8,7 @@ import shutil
 import random
 import symengine
 import numpy as np
-from jitcxde_common import jitcxde, check
+from jitcxde_common import jitcxde, checker
 from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers, find_dependent_helpers
 from jitcxde_common.symbolic import collect_arguments, has_function
 
@@ -184,31 +184,36 @@ class jitcsde(jitcxde):
 		self._t = value
 		self.reset_integrator()
 	
-	@check
+	@checker
 	def _check_non_empty(self):
 		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
-			if not function():
-				self._fail_check("%s is empty." % name)
+			self._check_assert( function(), "%s is empty."%name )
 		
-	@check
+	@checker
 	def _check_valid_arguments(self):
 		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
 			for i,entry in enumerate(function()):
 				for argument in collect_arguments(entry,y):
-					if argument[0] < 0:
-						self._fail_check("y is called with a negative argument (%i) in component %i of %s." % (argument[0], i, name))
-					if argument[0] >= self.n:
-						self._fail_check("y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n, i, name))
+					self._check_assert(
+							argument[0] >= 0,
+							"y is called with a negative argument (%i) in component %i of %s." % (argument[0], i, name)
+						)
+					self._check_assert(
+							argument[0] < self.n,
+							"y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n, i, name)
+						)
 	
-	@check
+	@checker
 	def _check_valid_symbols(self):
 		valid_symbols = [t] + [helper[0] for helper in chain(self._f_helpers,self._g_helpers)] + list(self.control_pars)
 		
 		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
 			for i,entry in enumerate(function()):
 				for symbol in entry.atoms(symengine.Symbol):
-					if symbol not in valid_symbols:
-						self._fail_check("Invalid symbol (%s) in component %i of %s."  % (symbol.name, i, name))
+					self._check_assert(
+							symbol in valid_symbols,
+							"Invalid symbol (%s) in component %i of %s."  % (symbol.name, i, name)
+						)
 	
 	def reset_integrator(self):
 		"""
@@ -646,15 +651,25 @@ class jitcsde_jump(jitcsde):
 		
 		return super(jitcsde_jump,self).integrate(target_time)
 	
-	@check
-	def check_jump_function(self):
+	def check(self, fail_fast=True):
+		"""
+			Same as jitcsde’s check, but additionally checks the output of amp function.
+		"""
+		super(jitcsde_jump,self).check(fail_fast)
+	
+	@checker
+	def check_amp_function(self):
 		output = self.amp(
 				self.t or 0.0,
 				self.y or np.random.random(self.n)
 			)
 		
-		if not isinstance(output,np.ndarray):
-			self._fail_check("Output of amp function is not an array")
-		if output.size != self.n:
-			self._fail_check("Output of amp function has the wrong dimension")
+		self._check_assert(
+				isinstance(output,np.ndarray),
+				"Output of amp function is not an array"
+			)
+		self._check_assert(
+				output.size == self.n,
+				"Output of amp function has the wrong dimension"
+			)
 
