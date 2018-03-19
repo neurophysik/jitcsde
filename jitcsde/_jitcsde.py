@@ -81,6 +81,8 @@ class jitcsde(jitcxde):
 		
 		self.f_sym = self._handle_input(f_sym)
 		self.g_sym = self._handle_input(g_sym)
+		
+		# The following two are the arguments passed to the function; _f_helpers and _g_helpers (note the underscore) are used internally.
 		self.helpers = helpers
 		self.g_helpers = g_helpers
 		
@@ -196,11 +198,11 @@ class jitcsde(jitcxde):
 				for argument in collect_arguments(entry,y):
 					self._check_assert(
 							argument[0] >= 0,
-							"y is called with a negative argument (%i) in component %i of %s." % (argument[0], i, name)
+							"y is called with a negative argument (%i) in component %i of %s." % (argument[0],i,name)
 						)
 					self._check_assert(
 							argument[0] < self.n,
-							"y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n, i, name)
+							"y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n,i,name)
 						)
 	
 	@checker
@@ -212,7 +214,7 @@ class jitcsde(jitcxde):
 				for symbol in entry.atoms(symengine.Symbol):
 					self._check_assert(
 							symbol in valid_symbols,
-							"Invalid symbol (%s) in component %i of %s."  % (symbol.name, i, name)
+							"Invalid symbol (%s) in component %i of %s."  % (symbol.name,i,name)
 						)
 	
 	def reset_integrator(self):
@@ -232,7 +234,7 @@ class jitcsde(jitcxde):
 		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
-		self.y = np.array(initial_value, copy=True, dtype=float)
+		self.y = np.array( initial_value, copy=True, dtype=float )
 		self.t = time
 		return self
 	
@@ -253,13 +255,13 @@ class jitcsde(jitcxde):
 		assert self.t is not None, "You need to set an initial time first."
 		
 		self.SDE = python_core.sde_integrator(
-			self.f_sym, self.g_sym,
-			self.y,
-			self.t,
-			self._f_helpers, self._g_helpers,
-			self.control_pars,
-			self.seed,
-			self.additive
+				self.f_sym, self.g_sym,
+				self.y,
+				self.t,
+				self._f_helpers, self._g_helpers,
+				self.control_pars,
+				self.seed,
+				self.additive
 			)
 		self.compile_attempt = False
 	
@@ -320,8 +322,8 @@ class jitcsde(jitcxde):
 		helper_lengths = dict()
 		
 		for sym,helpers,name,long_name in [
-				( self.f_sym, self._f_helpers, "f", "drift"     ),
-				( self.g_sym, self._g_helpers, "g", "diffusion" )
+					( self.f_sym, self._f_helpers, "f", "drift"     ),
+					( self.g_sym, self._g_helpers, "g", "diffusion" )
 				]:
 			setter_name = "set_" + long_name
 			wc = sym()
@@ -342,14 +344,14 @@ class jitcsde(jitcxde):
 				wc = symengine.sympify(_cse[1][0])
 			
 			arguments = [
-				("self", "sde_integrator * const"),
-				("t", "double const"),
-				(long_name, "double", self.n),
+					("self", "sde_integrator * const"),
+					("t", "double const"),
+					(long_name, "double", self.n),
 				]
 			if name=="f" or not self.additive:
-				arguments.append( ("Y", "double", self.n) )
+				arguments.append( ("Y","double",self.n) )
 			if name=="f":
-				arguments.append( ("h", "double") )
+				arguments.append( ("h","double") )
 			
 			functions = ["y"]
 			self.substitutions = {
@@ -373,18 +375,18 @@ class jitcsde(jitcxde):
 				functions.extend(["get_"+name+"_helper", "set_"+name+"_helper"])
 				
 				self.render_and_write_code(
-					converted_helpers,
-					name = name + "_helpers",
-					chunk_size = chunk_size,
-					arguments = arguments + extra_arguments
+						converted_helpers,
+						name = name + "_helpers",
+						chunk_size = chunk_size,
+						arguments = arguments + extra_arguments
 					)
 			
 			setter = symengine.Function(setter_name)
 			self.render_and_write_code(
-				(setter(i,finalise(entry)) for i,entry in enumerate(wc)),
-				name = name,
-				chunk_size = chunk_size,
-				arguments = arguments
+					(setter(i,finalise(entry)) for i,entry in enumerate(wc)),
+					name = name,
+					chunk_size = chunk_size,
+					arguments = arguments
 				)
 			
 			helper_lengths[name] = len(helpers_wc)
@@ -392,13 +394,13 @@ class jitcsde(jitcxde):
 		self._process_modulename(modulename)
 		
 		self._render_template(
-			n = self.n,
-			number_of_f_helpers = helper_lengths["f"],
-			number_of_g_helpers = helper_lengths["g"],
-			control_pars = [par.name for par in self.control_pars],
-			additive = self.additive,
-			numpy_rng = numpy_rng,
-			chunk_size = chunk_size # only for OMP
+				n = self.n,
+				number_of_f_helpers = helper_lengths["f"],
+				number_of_g_helpers = helper_lengths["g"],
+				control_pars = [ par.name for par in self.control_pars ],
+				additive = self.additive,
+				numpy_rng = numpy_rng,
+				chunk_size = chunk_size # only for OMP
 			)
 		
 		if not numpy_rng:
@@ -416,10 +418,8 @@ class jitcsde(jitcxde):
 			assert self.t is not None, "You need to set an initial time first."
 			
 			if self.compile_attempt:
-				if self.seed is not None:
-					seed = self.seed
-				else:
-					seed = int(random.getrandbits(32))
+				# We cannot just use “seed = self.seed or int(…” here, as this would not work as intended if self.seed is 0.
+				seed = int(random.getrandbits(32)) if self.seed is None else self.seed
 				self.SDE = self.jitced.sde_integrator(self._t,self.y,seed)
 			else:
 				self.generate_lambdas()
@@ -459,8 +459,6 @@ class jitcsde(jitcxde):
 		
 		"""
 		Sets the parameters for the step-size adaption.
-		
-		Note that the defaults have not yet been optimised. (TODO)
 		
 		Parameters
 		----------
@@ -519,7 +517,7 @@ class jitcsde(jitcxde):
 		self.max_factor = max_factor
 		self.min_factor = min_factor
 		
-		self.q = 1.5 # TODO
+		self.q = 1.5
 		
 		self.integration_parameters_set = True
 	
@@ -532,14 +530,13 @@ class jitcsde(jitcxde):
 				"rtol: %e\n"
 				"min_step: %e\n\n"
 				"The most likely reasons for this are:\n"
-				"• You did not sufficiently address initial discontinuities.\n"
 				"• The SDE is ill-posed or stiff.\n"
 				"• You did not allow for an absolute error tolerance (atol) though your SDE calls for it. Even a very small absolute tolerance (1e-16) may sometimes help."
 				% (self.atol, self.rtol, self.min_step))
 	
 	def _adjust_step_size(self, actual_dt):
 		"""
-		adjusts the step size and returns whether the step needs to be repeated
+		adjusts the step size and returns whether the step was successful
 		"""
 		p = self.SDE.get_p(self.atol, self.rtol)
 		if p > self.decrease_threshold:
@@ -569,6 +566,7 @@ class jitcsde(jitcxde):
 			the computed state of the system at `target_time`.
 		"""
 		self._initiate()
+		
 		last_step = ( self.SDE.t >= target_time )
 		
 		while not last_step:
