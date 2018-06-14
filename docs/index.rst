@@ -23,7 +23,7 @@ This approach has the following advantages:
 	In fact, blatant optimisations such as :math:`y·(x-x)=0` are done on the fly by SymEngine.
 	This is for example interesting if you want to simulate dynamics on a sparse network, as non-existing links are not taken into account when calculating the derivative when integrating.
 
-*	**Symmbolic interface**
+*	**Symbolic interface**
 	You can enter your differential equations almost like you would on paper.
 	Also, if you are working with SymPy or SymEngine anyway – e.g., to calculate points of zero drift –, you do not need to bother much with translating your equations.
 
