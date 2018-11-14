@@ -94,6 +94,25 @@ class TestAutofilteringHelpers(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_with_helpers,g_with_helpers,helpers=helpers,g_helpers="auto")
 
+# Generator
+def f_generator():
+	yield from f
+
+def g_generator():
+	yield from g
+
+class TestStrat(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_generator,g_generator)
+
+# Dictionary
+f_dict = { y(i):entry for i,entry in enumerate(f) }
+g_dict = { y(i):entry for i,entry in enumerate(g) }
+
+class TestStrat(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_dict,g_dict)
+
 # Stratonovich
 f_strat = [
 		5/2*exp(-3/2-y(0)**2+y(0))*(2*y(0)-1)*(3+5*exp(-3/2-y(0)**2+y(0)))
