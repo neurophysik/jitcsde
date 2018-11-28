@@ -69,6 +69,12 @@ class CompareResults(unittest.TestCase):
 		new_result = self.SDE.integrate(0.001)
 		self.compare_with_result(new_result)
 
+class TestInitialValueAsDict(CompareResults):
+	def test_default(self):
+		self.SDE.set_seed(42)
+		self.SDE.set_initial_value({y(0):initial_value[0]},0.0)
+
+
 y2_m_y, state, exp_term, polynome = symbols("y2_m_y, state, exp_term, polynome")
 
 helpers = [
@@ -205,8 +211,6 @@ class TestCheck(unittest.TestCase):
 		SDE = jitcsde([y(0)],[x])
 		with self.assertRaises(ValueError):
 			SDE.check()
-	
-	
 
 # Boilerplate
 

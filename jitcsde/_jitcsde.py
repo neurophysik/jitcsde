@@ -231,8 +231,15 @@ class jitcsde(jitcxde):
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
-		Sets the initial value and starting time of the integration.
+		Sets the initial value and starting time of the integration. The initial value can either be an iterable of numbers or a dictionary that maps dynamical variables to their initial value.
 		"""
+		if isinstance(initial_value,dict):
+			initial_value = self._list_from_dynvar_dict(
+					initial_value,
+					"initial value",
+					self.n,
+				)
+		
 		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
