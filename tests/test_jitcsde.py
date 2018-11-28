@@ -67,6 +67,7 @@ class CompareResults(unittest.TestCase):
 	def tearDown(self):
 		self.SDE.check()
 		new_result = self.SDE.integrate(0.001)
+		assert self.SDE.y_dict[y(0)] == new_result[0]
 		self.compare_with_result(new_result)
 
 class TestInitialValueAsDict(CompareResults):

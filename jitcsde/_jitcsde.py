@@ -171,6 +171,15 @@ class jitcsde(jitcxde):
 		self.reset_integrator()
 	
 	@property
+	def y_dict(self):
+		"""
+		The current state of the system as a dictionary mapping dynamical variables to their current value.
+		Note that if you use this often, you may want to use self.y instead for efficiency.
+		"""
+		
+		return { self.dynvar(i):self.y[i] for i in range(self.n) }
+	
+	@property
 	def t(self):
 		"""
 		Returns
