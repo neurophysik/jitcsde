@@ -260,7 +260,7 @@ static PyObject * pin_noise(sde_integrator * self, PyObject * args)
 		return NULL;
 	}
 	
-	for (int i=0; i<number; i++)
+	for (unsigned int i=0; i<number; i++)
 		append_noise(self, step);
 	
 	Py_RETURN_NONE;
