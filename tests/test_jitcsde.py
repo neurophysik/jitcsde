@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.testing.utils import assert_allclose
-from jitcsde import jitcsde, y, UnsuccessfulIntegration
+from jitcsde import jitcsde, y, UnsuccessfulIntegration, test
 import platform
 from symengine import symbols, exp, Rational
 import unittest
@@ -212,6 +212,12 @@ class TestCheck(unittest.TestCase):
 		SDE = jitcsde([y(0)],[x])
 		with self.assertRaises(ValueError):
 			SDE.check()
+
+class TestTest(unittest.TestCase):
+	def test_test(self):
+		for sympy in [False,True]:
+			for omp in [True,False]:
+				test(omp=omp,sympy=sympy)
 
 # Boilerplate
 

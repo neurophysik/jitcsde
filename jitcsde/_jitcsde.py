@@ -618,10 +618,12 @@ class jitcsde(jitcxde):
 			distance of pre-defined noise points
 		"""
 		
+		self._initiate()
+		
 		assert number>=0, "Number must be non-negative"
 		assert step_size>0, "Step size must be positive"
-		
-		self._initiate()
+		if not isinstance(number,int):
+			warn("`number` does not appear to be a integer. This is very likely cause an error immediately.")
 		self.SDE.pin_noise(number,step_size)
 
 class jitcsde_jump(jitcsde):
@@ -688,4 +690,22 @@ class jitcsde_jump(jitcsde):
 				output.size == self.n,
 				"Output of amp function has the wrong dimension"
 			)
+
+def test(omp=True,sympy=True):
+	"""
+		Runs a quick simulation to test whether:
+		
+		* a compiler is available and can be interfaced by Setuptools,
+		* OMP libraries are available and can be assessed,
+		* SymPy is available.
+		
+		The latter two tests can be deactivated with the respective argument. This is not a full software test but rather a quick sanity check of your installation.
+	"""
+	if sympy:
+		import sympy
+	SDE = jitcsde( [y(1),-y(0)], [0.1*y(0),0.1], verbose=False )
+	SDE.compile_C(omp=omp,chunk_size=1)
+	SDE.set_initial_value([1,2])
+	SDE.integrate(0.1)
+
 

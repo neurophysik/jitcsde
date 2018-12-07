@@ -2,7 +2,8 @@ from ._jitcsde import (
 		jitcsde, jitcsde_jump,
 		t, y,
 		UnsuccessfulIntegration,
-		)
+		test
+	)
 
 try:
 	from .version import version as __version__
