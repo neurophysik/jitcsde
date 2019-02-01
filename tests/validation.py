@@ -11,13 +11,11 @@ from jitcsde import jitcsde, y
 import symengine
 from kmc import KMC
 
-kmax = 2
-threshold = 0.6
+kmax = 6
+thresholds = [0.6,0.6,0.6,0.5,0.5,0.4]
+nbins = 100
 
 times = lambda dt,N: np.arange(dt,(N+1)*dt,dt)
-
-class KMC_Error(Exception):
-	pass
 
 scenarios = [
 		{
@@ -84,10 +82,10 @@ def cases(scenario):
 		for pin in (False,True):
 			name = "integrator with dt=%f" % dt
 			name += " and noise pinning" if pin else ""
-			results = lambda: test_integrator(scenario,dt=dt,pin=pin)
-			yield dt, results, name
+			runner = lambda: test_integrator(scenario,dt=dt,pin=pin)
+			yield dt, runner, name
 
-def kmc_test(dt, result):
+def kmc_test(dt,runner,ks):
 	Y = symengine.Symbol("Y")
 	F = scenario["F"].subs(y(0),Y)
 	G = scenario["G"].subs(y(0),Y)
@@ -98,34 +96,42 @@ def kmc_test(dt, result):
 	
 	# Theoretical expectation
 	M = [
-		symengine.Lambdify( [Y], F + (F*Fd+G**2*Fdd)*dt/2 ),
-		symengine.Lambdify( [Y], G**2 + (2*F*(F+G*Gd)+G**2*(2*Fd+Gd**2+G*Gdd))*dt/2 ),
-		lambda x: 0,
-		lambda x: 0
+			symengine.Lambdify( [Y], F + (F*Fd+G**2*Fdd/2)*dt/2 ),
+			symengine.Lambdify( [Y], G**2 + (2*F*(F+G*Gd)+G**2*(2*Fd+Gd**2+G*Gdd))*dt/2 ),
+			symengine.Lambdify( [Y], 3*G**2*(F+G*Gd)*dt ),
+			symengine.Lambdify( [Y], 3*G**4*dt ),
+			symengine.Lambdify( [Y], 15*G**4*(F+2*G*Gd)*dt**2 ),
+			symengine.Lambdify( [Y], 15*G**6*dt**2 )
 		]
 	
 	# Numerical estimate
-	bins, *kmcs = KMC( result(), dt, kmax=kmax )
+	bins, *kmcs = KMC( runner(), dt, kmax=kmax, nbins=nbins )
 	
 	# Comparing the two
-	for k in range(kmax):
+	i = 0
+	while i<len(ks):
+		k = ks[i]
 		good = 0
 		for X,value,error in zip(bins,*kmcs[k]):
 			theory = M[k](X)
 			if value-error < theory < value+error :
 				good += 1
-		if good < threshold*len(bins):
-			raise KMC_Error
+		if good < thresholds[k]*len(bins):
+			print(f"KMC {k+1}: {good}/{len(bins)}")
+			i += 1
+		else:
+			ks.pop(i)
+	return ks
 
 retries = 0
 
 for scenario in scenarios:
-	for dt, results, name in cases(scenario):
+	for dt, runner, name in cases(scenario):
+		ks = list(range(kmax))
 		for _ in range(5):
-			try:
-				with np.errstate(invalid='ignore'):
-					kmc_test(dt,results)
-			except KMC_Error:
+			with np.errstate(invalid='ignore'):
+				ks = kmc_test(dt,runner,ks)
+			if ks:
 				retries += 1
 				print( "R", end="", flush=True )
 			else:
@@ -136,5 +142,5 @@ for scenario in scenarios:
 print("")
 
 if retries:
-	print("Number of reruns: %i. This number should only rarely be larger than 3."% retries)
+	print("Number of reruns: %i. This number should only rarely be larger than 5."% retries)
 
