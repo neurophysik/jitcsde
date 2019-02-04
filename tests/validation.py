@@ -117,7 +117,6 @@ def kmc_test(dt,runner,ks):
 			if value-error < theory < value+error :
 				good += 1
 		if good < thresholds[k]*len(bins):
-			print(f"KMC {k+1}: {good}/{len(bins)}")
 			i += 1
 		else:
 			ks.pop(i)
