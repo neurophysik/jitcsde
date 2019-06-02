@@ -12,10 +12,10 @@ from jitcxde_common import jitcxde, checker
 from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers, find_dependent_helpers
 from jitcxde_common.symbolic import collect_arguments, has_function
 
-#: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities.
+#: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. You can import a SymPy variant from the submodule `sympy_symbols` instead (see `SymPy vs. SymEngine`_ for details).
 y = symengine.Function("y")
 
-#: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define an analogous symbol directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities.
+#: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define an analogous symbol directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. You can import a SymPy variant from the submodule `sympy_symbols` instead (see `SymPy vs. SymEngine`_ for details).
 t = symengine.Symbol("t",real=True)
 
 class UnsuccessfulIntegration(Exception):
