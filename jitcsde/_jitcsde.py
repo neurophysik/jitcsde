@@ -443,19 +443,27 @@ class jitcsde(jitcxde):
 				self.generate_lambdas()
 		
 		self._set_integration_parameters()
-	
+r
 	def set_parameters(self, *parameters):
 		"""
-		Set the control parameters defined by the `control_pars` argument of the `jitcsde`.
-		
+		Set the control parameters defined by the `control_pars` argument of the `jitcsde`. Note that you probably want to use `purge_past` and address initial discontinuities every time after you do this.
+
 		Parameters
 		----------
 		parameters : floats
-			Values of the control parameters. The order must be the same as in the `control_pars` argument of the `jitcsde`.
+			Values of the control parameters.
+			You can also use a single iterable containing these.
+			Either way, the order must be the same as in the `control_pars` argument of the `jitcsde`.
 		"""
-	
+		
 		self._initiate()
-		self.SDE.set_parameters(*parameters)
+		try:
+			self.SDE.set_parameters(*parameters[0])
+		except TypeError:
+			self.SDE.set_parameters(*parameters)
+		else:
+			if len(parameters)>1:
+				raise TypeError("Argument must either be a single sequence or multiple numbers.")
 	
 	def _set_integration_parameters(self):
 		if not self.integration_parameters_set:
