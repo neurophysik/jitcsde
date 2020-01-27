@@ -443,7 +443,7 @@ class jitcsde(jitcxde):
 				self.generate_lambdas()
 		
 		self._set_integration_parameters()
-r
+	
 	def set_parameters(self, *parameters):
 		"""
 		Set the control parameters defined by the `control_pars` argument of the `jitcsde`. Note that you probably want to use `purge_past` and address initial discontinuities every time after you do this.
