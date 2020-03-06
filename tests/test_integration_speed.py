@@ -30,21 +30,21 @@ initial_state = np.random.random(2)
 # Integrating the ODE
 #--------------------
 
-ODE = jitcode(F)
+ODE = jitcode(F,verbose=False)
 ODE.set_integrator("dopri5")
 ODE.set_initial_value(initial_state,0.0)
 
 times = 500+np.arange(0,200,0.005)
-ode_data = np.vstack(ODE.integrate(time) for time in times)
+ode_data = np.vstack([ODE.integrate(time) for time in times])
 
 # Integrating the SDE
 # -------------------
 
-SDE = jitcsde( [1*f for f in F], [0.01*f for f in F] )
+SDE = jitcsde( [1*f for f in F], [0.01*f for f in F], verbose=False )
 SDE.set_initial_value(initial_state,0.0)
 
 times = 500+np.arange(0,300,1)
-sde_data = np.vstack(SDE.integrate(time) for time in times)
+sde_data = np.vstack([SDE.integrate(time) for time in times])
 
 # The actual test
 # ---------------
