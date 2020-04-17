@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing.utils import assert_allclose
 from jitcsde import jitcsde, y, UnsuccessfulIntegration, test
 import platform
-from symengine import symbols, exp, Rational
+from symengine import symbols, exp, Rational, Function
 import unittest
 
 if platform.system() == "Windows":
@@ -75,7 +75,7 @@ class TestInitialValueAsDict(CompareResults):
 		self.SDE.set_seed(42)
 		self.SDE.set_initial_value({y(0):initial_value[0]},0.0)
 
-
+# Helpers
 y2_m_y, state, exp_term, polynome = symbols("y2_m_y, state, exp_term, polynome")
 
 helpers = [
@@ -119,6 +119,21 @@ g_dict = { y(i):entry for i,entry in enumerate(g) }
 class TestStrat(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_dict,g_dict)
+
+# Control Parameters
+
+five, four = symbols("five four")
+
+f_control_pars = [-y(0)**3 + four*y(0) + y(0)**2]
+g_control_pars = [five*exp(-y(0)**2+y(0)-Rational(3,2)) + 3]
+
+class TestControlPars(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_control_pars,g_control_pars,control_pars=[five,four])
+	
+	def tearDown(self):
+		self.SDE.set_parameters([5,4])
+		super().tearDown()
 
 # Stratonovich
 f_strat = [
