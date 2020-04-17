@@ -311,6 +311,38 @@ static PyObject * set_parameters(sde_integrator * const self, PyObject * args)
 
 {% endif %}
 
+npy_intp dim[1] = { {{n}} };
+
+{% if callbacks|length %}
+PyObject * n_dim_read_only_array_from_data(void * data) {
+	PyObject * result = PyArray_SimpleNewFromData( 1, dim, TYPE_INDEX, data );
+	PyArray_CLEARFLAGS( (PyArrayObject *) result, NPY_ARRAY_WRITEABLE );
+	return result;
+}
+
+double inline callback(PyObject * Python_function, PyObject * arglist)
+{
+	PyObject * py_result = PyObject_CallObject(Python_function,arglist);
+	Py_DECREF(arglist);
+	double result = PyFloat_AsDouble(py_result);
+	Py_DECREF(py_result);
+	return result;
+}
+{% endif %}
+
+{% for function,nargs in callbacks %}
+static PyObject * callback_{{function}};
+# define {{function}}(...) callback(\
+		callback_{{function}}, \
+		Py_BuildValue( \
+				{% if nargs -%}
+				"(O{{'d'*nargs}})", n_dim_read_only_array_from_data(Y) , __VA_ARGS__ \
+				{% else -%}
+				"(O)", n_dim_read_only_array_from_data(Y) \
+				{% endif -%}
+			))
+{% endfor %}
+
 # define set_drift(i, value) (drift[i] = (value)*h)
 # define set_diffusion(i, value) (diffusion[i] = value)
 # define y(i) (Y[i])
@@ -500,8 +532,8 @@ static PyObject * accept_step(sde_integrator * const self)
 
 static PyObject * get_state(sde_integrator * const self)
 {
-	npy_intp dim[1] = { {{n}} };
 	PyArrayObject * array = (PyArrayObject*) PyArray_SimpleNewFromData(1, dim, TYPE_INDEX, self->state);
+	// Copy is necessary because self->state may be overwritten after this.
 	PyObject * result = PyArray_NewCopy(array,NPY_ANYORDER);
 	Py_DECREF(array);
 	return result;
@@ -543,11 +575,28 @@ static int sde_integrator_init(sde_integrator * self, PyObject * args)
 	PyArrayObject * Y;
 	PyObject * seed;
 	
-	if (!PyArg_ParseTuple(args,"dO!O",&(self->t),&PyArray_Type,&Y,&seed))
+	if (!PyArg_ParseTuple(
+			args,
+			"dO!O{{'O'*callbacks|length}}",
+			&(self->t),
+			&PyArray_Type, &Y,
+			&seed
+			{% for function,nargs in callbacks %}
+			, &callback_{{function}}
+			{% endfor %}
+		))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
 		return 1;
 	}
+	
+	{% for function,nargs in callbacks %}
+	if (!PyCallable_Check(callback_{{function}}))
+	{
+		PyErr_SetString(PyExc_TypeError,"Callback must be callable.");
+		return -1;
+	}
+	{% endfor %}
 	
 	self->noises = NULL;
 	self->current_noise = NULL;

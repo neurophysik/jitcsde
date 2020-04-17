@@ -121,7 +121,6 @@ class TestStrat(CompareResults):
 		self.SDE = jitcsde(f_dict,g_dict)
 
 # Control Parameters
-
 five, four = symbols("five four")
 
 f_control_pars = [-y(0)**3 + four*y(0) + y(0)**2]
@@ -134,6 +133,32 @@ class TestControlPars(CompareResults):
 	def tearDown(self):
 		self.SDE.set_parameters([5,4])
 		super().tearDown()
+
+# Callback
+def drift(y,y_0):
+	return -y[0]**3 + 4*y_0 + y[0]**2
+three = lambda y: 3
+call_drift = Function("call_drift")
+call_three = Function("call_three")
+callbacks = [
+		(call_drift,drift,1),
+		(call_three,three,0),
+	]
+f_callback = [call_drift(y(0))]
+g_callback = [5*exp(-y(0)**2+y(0)-Rational(3,2)) + call_three()]
+
+class TestCallback(CompareResults):
+	def setUp(self):
+		self.SDE = jitcsde(f_callback,g_callback,callback_functions=callbacks)
+	
+	def test_save_and_load(self):
+		filename = self.SDE.save_compiled(overwrite=True)
+		self.SDE = jitcsde(module_location=filename,n=len(f),callback_functions=callbacks)
+		self.test_default()
+	
+	@unittest.skip("not implemented")
+	def test_Python_core(self):
+		pass
 
 # Stratonovich
 f_strat = [

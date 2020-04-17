@@ -57,6 +57,13 @@ class jitcsde(jitcxde):
 	control_pars : list of symbols
 		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation with `set_parameters`. Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
 	
+	callback_functions : iterable
+		Python functions that should be called at integration time (callback) when evaluating the derivative. Each element of the iterable represents one callback function as a tuple containing (in that order):
+		
+		*	A SymEngine function object used in `f_sym` to represent the function call. If you want to use any JiTCSDE features that need the derivative, this must have a properly defined `f_diff` method with the derivative being another callback function (or constant).
+		*	The Python function to be called. This function will receive the state array (`y`) as the first argument. All further arguments are whatever you use as arguments of the SymEngine function in `f_sym`. These must be floats. The return value must also be a float (or something castable to float). It is your responsibility to ensure that this function is deterministic and sufficiently smooth with respect to time and state.
+		*	The number of arguments, **excluding** the state array as mandatory first argument. This means if you have a variadic Python function, you cannot just call it with different numbers of arguments in `f_sym`, but you have to define separate callbacks for each of numer of arguments.
+	
 	verbose : boolean
 		Whether JiTCSDE shall give progress reports on the processing steps.
 	
@@ -67,11 +74,12 @@ class jitcsde(jitcxde):
 	dynvar = y
 	
 	def __init__( self,
-			f_sym = (), g_sym = (),
+			f_sym = (), g_sym = (), *,
 			helpers = None, g_helpers = "auto",
 			n = None,
 			additive = None, ito = True,
 			control_pars = (),
+			callback_functions = (),
 			verbose = True,
 			module_location = None
 		):
@@ -97,6 +105,7 @@ class jitcsde(jitcxde):
 				self._stratonovich_to_ito()
 		
 		self.control_pars = control_pars
+		self.callback_functions = callback_functions
 		self.integration_parameters_set = False
 		self.SDE = None
 		self.seed = None
@@ -266,6 +275,8 @@ class jitcsde(jitcxde):
 		"""
 		Explicitly initiates a purely Python-based integrator.
 		"""
+		if self.callback_functions:
+			raise NotImplementedError("Callbacks do not work with lambdification. You must use the C backend.")
 		
 		import jitcsde._python_core as python_core
 		
@@ -418,7 +429,8 @@ class jitcsde(jitcxde):
 				control_pars = [ par.name for par in self.control_pars ],
 				additive = self.additive,
 				numpy_rng = numpy_rng,
-				chunk_size = chunk_size # only for OMP
+				chunk_size = chunk_size, # only for OMP
+				callbacks = [(fun.name,n_args) for fun,_,n_args in self.callback_functions],
 			)
 		
 		if not numpy_rng:
@@ -438,7 +450,11 @@ class jitcsde(jitcxde):
 			if self.compile_attempt:
 				# We cannot just use “seed = self.seed or int(…” here, as this would not work as intended if self.seed is 0.
 				seed = int(random.getrandbits(32)) if self.seed is None else self.seed
-				self.SDE = self.jitced.sde_integrator(self._t,self.y,seed)
+				self.SDE = self.jitced.sde_integrator(
+						self._t, self.y,
+						seed,
+						*[callback for _,callback,_ in self.callback_functions],
+					)
 			else:
 				self.generate_lambdas()
 		
@@ -608,7 +624,8 @@ class jitcsde(jitcxde):
 			else:
 				last_step = False
 		
-		return self.SDE.get_state()
+		result = self.SDE.get_state()
+		return result
 	
 	def pin_noise(self, number, step_size):
 		"""
