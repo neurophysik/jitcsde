@@ -320,7 +320,7 @@ PyObject * n_dim_read_only_array_from_data(void * data) {
 	return result;
 }
 
-double inline callback(PyObject * Python_function, PyObject * arglist)
+static inline double callback(PyObject * Python_function, PyObject * arglist)
 {
 	PyObject * py_result = PyObject_CallObject(Python_function,arglist);
 	Py_DECREF(arglist);
