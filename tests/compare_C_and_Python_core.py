@@ -23,7 +23,7 @@ if platform.system() == "Windows":
 	compile_args = None
 else:
 	from jitcxde_common import DEFAULT_COMPILE_ARGS
-	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG","-O0"]
+	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG","-O1"]
 
 def compare(x,y,rtol=1e-4,atol=1e-4):
 	try:

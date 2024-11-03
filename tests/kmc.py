@@ -70,10 +70,14 @@ def KMC(Xs, h, kmax=4, nbins=100):
 	for k in range(1,kmax+1):
 		with np.errstate(divide='ignore',invalid='ignore'):
 			with warnings.catch_warnings():
-				warnings.filterwarnings("ignore", message="Mean of empty slice.")
-				warnings.filterwarnings("ignore", message="Degrees of freedom <= 0 for slice")
+				for message in [
+							"Mean of empty slice.",
+							"Degrees of freedom <= 0 for slice",
+							"One or more sample arguments is too small",
+						]:
+					warnings.filterwarnings("ignore", message=message)
 				means = np.array([ np.mean(data[i]**k)/h for i in range(nbins) ])
-				sems = np.array([ sem(data[i]**k)/h for i in range(nbins) ])
+				sems = np.array([ np.atleast_1d(sem(data[i]**k)/h) for i in range(nbins) ])
 		results.append((means,sems))
 	
 	return results

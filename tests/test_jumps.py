@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing.utils import assert_allclose
+from numpy.testing import assert_allclose
 from jitcsde import jitcsde_jump, y, UnsuccessfulIntegration
 import platform
 from symengine import symbols, exp, Rational
