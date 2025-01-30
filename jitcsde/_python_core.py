@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import symengine
 import numpy as np
+import symengine
 from numpy import sqrt
+
 from jitcxde_common.symbolic import ordered_subs
+
 
 def perform_step(t,h,f,g,y,I_1,I_11,I_111,I_10):
 	"""

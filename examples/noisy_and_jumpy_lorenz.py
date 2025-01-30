@@ -29,9 +29,10 @@ See `the sources <https://raw.githubusercontent.com/neurophysik/jitcsde/master/e
 """
 
 if __name__ == "__main__":
-	from jitcsde import y, jitcsde_jump
 	import numpy
 	import symengine
+
+	from jitcsde import jitcsde_jump, y
 	
 	ρ = 28
 	σ = 10

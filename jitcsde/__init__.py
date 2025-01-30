@@ -1,9 +1,5 @@
-from ._jitcsde import (
-		jitcsde, jitcsde_jump,
-		t, y,
-		UnsuccessfulIntegration,
-		test
-	)
+from ._jitcsde import UnsuccessfulIntegration, jitcsde, jitcsde_jump, t, test, y
+
 
 try:
 	from .version import version as __version__

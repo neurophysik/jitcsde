@@ -6,10 +6,12 @@ Tests several incarnations of the integrator by checking whether the Kramers–M
 """
 
 import numpy as np
-from jitcsde._python_core import sde_integrator
-from jitcsde import jitcsde, y
 import symengine
 from kmc import KMC
+
+from jitcsde import jitcsde, y
+from jitcsde._python_core import sde_integrator
+
 
 kmax = 6
 thresholds = [0.6,0.6,0.6,0.5,0.5,0.4]

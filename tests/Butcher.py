@@ -1,4 +1,5 @@
-from numpy import sqrt, array
+from numpy import array, sqrt
+
 
 A0 = array([
 		[ 0 , 0, 0, 0],

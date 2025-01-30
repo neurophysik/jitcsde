@@ -1,8 +1,11 @@
+import unittest
+
 import numpy as np
-from jitcsde._python_core import sde_integrator
 from numpy.testing import assert_allclose, assert_array_equal
 from symengine import Integer
-import unittest
+
+from jitcsde._python_core import sde_integrator
+
 
 test_noise = []
 for _ in range(10):

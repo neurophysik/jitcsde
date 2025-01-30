@@ -1,16 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from warnings import warn
-from itertools import count, chain
-from os import path as path
-import shutil
 import random
-import symengine
+import shutil
+from itertools import chain, count
+from os import path as path
+from warnings import warn
+
 import numpy as np
-from jitcxde_common import jitcxde, checker
-from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers, find_dependent_helpers
+import symengine
+
+from jitcxde_common import checker, jitcxde
+from jitcxde_common.helpers import copy_helpers, filter_helpers, find_dependent_helpers, sort_helpers, sympify_helpers
 from jitcxde_common.symbolic import collect_arguments, has_function
+
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. You can import a SymPy variant from the submodule `sympy_symbols` instead (see `SymPy vs. SymEngine`_ for details).
 y = symengine.Function("y")

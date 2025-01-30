@@ -8,15 +8,15 @@ The argument is the number of runs.
 """
 
 import platform
-from sys import argv
 from random import Random
+from sys import argv
 
-import symengine
 import numpy as np
+import symengine
 from numpy.testing import assert_allclose
 
+from jitcsde import jitcsde, y
 from jitcsde._python_core import sde_integrator as py_sde_integrator
-from jitcsde import y, jitcsde
 
 
 if platform.system() == "Windows":

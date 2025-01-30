@@ -1,5 +1,6 @@
 from numpy import array
 
+
 A0 = array([
 		[ 0 , 0],
 		[3/4, 0],

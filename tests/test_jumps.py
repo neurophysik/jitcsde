@@ -1,9 +1,12 @@
+import platform
+import unittest
+
 import numpy as np
 from numpy.testing import assert_allclose
-from jitcsde import jitcsde_jump, y, UnsuccessfulIntegration
-import platform
-from symengine import symbols, exp, Rational
-import unittest
+from symengine import Rational, exp, symbols
+
+from jitcsde import UnsuccessfulIntegration, jitcsde_jump, y
+
 
 if platform.system() == "Windows":
 	compile_args = None

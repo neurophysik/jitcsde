@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import warnings
+
 import numpy as np
 from scipy.stats import sem
-import warnings
+
 
 def KMC(Xs, h, kmax=4, nbins=100):
 	"""

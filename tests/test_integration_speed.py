@@ -1,6 +1,8 @@
-from jitcsde import jitcsde, y
-from jitcode import jitcode
 import numpy as np
+from jitcode import jitcode
+
+from jitcsde import jitcsde, y
+
 
 """
 Tests the SDE integrator by comparing the trajectories of:
