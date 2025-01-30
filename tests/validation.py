@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 """
 Tests several incarnations of the integrator by checking whether the Kramers–Moyal coefficients as estimated from the time series comply with the theoretical expectation. This test produces false negatives from time to time, which is inevitable if we do not want false positives to be too likely. In case of a failure, the specific test is re-run. If the number of re-runs for a specific test or the total number of re-runs are too high, it’s time to worry.
 """
@@ -82,9 +79,9 @@ def cases(scenario):
 	
 	for dt in (0.0001,0.001):
 		for pin in (False,True):
-			name = "integrator with dt=%f" % dt
+			name = f"integrator with dt={dt}"
 			name += " and noise pinning" if pin else ""
-			runner = lambda: test_integrator(scenario,dt=dt,pin=pin)
+			runner = lambda dt=dt, pin=pin: test_integrator(scenario,dt=dt,pin=pin)
 			yield dt, runner, name
 
 def kmc_test(dt,runner,ks):
@@ -139,9 +136,9 @@ for scenario in scenarios:
 				print( ".", end="", flush=True )
 				break
 		else:
-			raise AssertionError("Testing %s failed five times. Something is probably really wrong" % name)
+			raise AssertionError(f"Testing {name} failed five times. Something is probably really wrong")
 print("")
 
 if retries:
-	print("Number of reruns: %i. This number should only rarely be larger than 5."% retries)
+	print(f"Number of reruns: {retries}. This number should only rarely be larger than 5.")
 

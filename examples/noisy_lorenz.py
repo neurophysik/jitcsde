@@ -1,7 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-"""
+r"""
 Suppose we want to integrate Lorenz oscillator each of whose components is subject to a diffusion that amounts to :math:`p` of the respective component, i.e.:
 
 .. math::

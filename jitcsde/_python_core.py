@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 import numpy as np
 import symengine
 from numpy import sqrt
@@ -52,7 +49,7 @@ def perform_SRA_step(t,h,f,g,y,I_1,I_10):
 	
 	return new_y, E_D, E_N
 
-class sde_integrator(object):
+class sde_integrator:
 	def __init__(self,
 				f,
 				g,
@@ -81,14 +78,14 @@ class sde_integrator(object):
 		g_subs = list(reversed(g_helpers))
 		lambda_args = [t]
 		for i in range(self.n):
-			symbol = symengine.Symbol("dummy_argument_%i"%i)
+			symbol = symengine.Symbol(f"dummy_argument_{i}")
 			lambda_args.append(symbol)
 			f_subs.append((y(i),symbol))
 			g_subs.append((y(i),symbol))
 		lambda_args.extend(control_pars)
 		
-		f_wc = list(ordered_subs(entry,f_subs).simplify(ratio=1) for entry in f())
-		g_wc = list(ordered_subs(entry,g_subs).simplify(ratio=1) for entry in g())
+		f_wc = [ordered_subs(entry,f_subs).simplify(ratio=1) for entry in f()]
+		g_wc = [ordered_subs(entry,g_subs).simplify(ratio=1) for entry in g()]
 		
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		
@@ -96,7 +93,7 @@ class sde_integrator(object):
 		self.f = lambda t,Y: core_f(np.hstack([t,Y,self.parameters]))
 		
 		if self.additive:
-			core_g = lambdify([t]+list(control_pars),g_wc)
+			core_g = lambdify([t, *control_pars],g_wc)
 			self.g = lambda t: core_g(np.hstack([t,self.parameters]))
 		else:
 			core_g = lambdify(lambda_args,g_wc)
@@ -179,7 +176,7 @@ class sde_integrator(object):
 	def print_noises(self):
 		if self.noises:
 			for noise in self.noises:
-				print("%e\t%e\t%e"%(noise[0],noise[1][0][0],noise[1][1][0]))
+				print(f"{noise[0]:e}\t{noise[1][0][0]:e}\t{noise[1][1][0]}")
 		else:
 			print("no noise")
 		print(self.noise_index)
