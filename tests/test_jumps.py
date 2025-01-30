@@ -46,7 +46,7 @@ class CompareResults(unittest.TestCase):
 		self.SDE.set_seed(42)
 		self.SDE.set_initial_value(initial_value,0.0)
 	
-	def test_reproducability(self):
+	def test_reproducibility(self):
 		self.test_default()
 	
 	def test_Python_core(self):

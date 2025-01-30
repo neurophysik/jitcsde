@@ -47,7 +47,7 @@ class CompareResults(unittest.TestCase):
 		self.SDE.compile_C(numpy_rng=True,extra_compile_args=compile_args)
 		self.test_default()
 	
-	def test_reproducability(self):
+	def test_reproducibility(self):
 		self.test_default()
 	
 	def test_Python_core(self):

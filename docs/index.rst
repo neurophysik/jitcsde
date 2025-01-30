@@ -104,7 +104,7 @@ References
 
 .. [RN17] C. Rackauckas, Q. Nie: Adaptive methods for stochastic differential equations via natural embeddings and rejection sampling with memory, Discrete Cont. Dyn.-B 22, pp. 2731–2761 (2017), `10.3934/dcdsb.2017133 <http://dx.doi.org/10.3934/dcdsb.2017133>`_.
 
-.. [R10] A. Rößler, Runge–Kutta methods for the strong approximation of solutions of stochastic differential equations, SIAM J. Numer. Anal. 48, pp. 922–952 (2010) `10.1137/09076636X <http://dx.doi.org/10.1137/09076636X>`_.
+.. [R10] A. Rößler, Runge–Kutta methods for the strong approximation of solutions of stochastic differential equations, SIAM J. Numerical Anal. 48, pp. 922–952 (2010) `10.1137/09076636X <http://dx.doi.org/10.1137/09076636X>`_.
 
 .. _JiTCODE: http://github.com/neurophysik/jitcode
 

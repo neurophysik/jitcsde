@@ -100,3 +100,7 @@ combine-as-imports = true
 known-local-folder = [ "jitcsde" ]
 known-first-party = [ "jitcxde_common" ]
 lines-after-imports = 2
+
+[tool.typos.default.extend-words]
+# short for Stratonovich used in various names
+strat = "strat"
