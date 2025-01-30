@@ -58,7 +58,7 @@ def perform_step(t,h,f,g,y,I_1,I_11,I_111,I_10):
 		X_bar = y + sum( α[i] * f(t+c0[i]*h,H0[i]) * h for i in range(4) )
 		for i in range(4):
 			X_bar += g( t+c1[i]*h, H1[i] ) * (
-							  β1[i] * I_1
+							β1[i] * I_1
 							+ β2[i] * I_11  / sqrt(h)
 							+ β3[i] * I_10  / h
 							+ β4[i] * I_111 / h

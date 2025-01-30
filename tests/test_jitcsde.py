@@ -12,7 +12,7 @@ if platform.system() == "Windows":
 	compile_args = None
 else:
 	from jitcxde_common import DEFAULT_COMPILE_ARGS
-	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG"]
+	compile_args = [*DEFAULT_COMPILE_ARGS,"-g","-UNDEBUG"]
 
 # Ensures that all kinds of formatting the input actually work and produce the same result. The correctness of this result itself is checked in validation_test.py.
 
@@ -111,7 +111,7 @@ def f_generator():
 def g_generator():
 	yield from g
 
-class TestStrat(CompareResults):
+class TestStratWithGenerator(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_generator,g_generator)
 
@@ -119,7 +119,7 @@ class TestStrat(CompareResults):
 f_dict = { y(i):entry for i,entry in enumerate(f) }
 g_dict = { y(i):entry for i,entry in enumerate(g) }
 
-class TestStrat(CompareResults):
+class TestStratWithDict(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_dict,g_dict)
 

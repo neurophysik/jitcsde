@@ -5,14 +5,14 @@ import numpy as np
 from numpy.testing import assert_allclose
 from symengine import Rational, exp, symbols
 
-from jitcsde import UnsuccessfulIntegration, jitcsde_jump, y
+from jitcsde import jitcsde_jump, y
 
 
 if platform.system() == "Windows":
 	compile_args = None
 else:
 	from jitcxde_common import DEFAULT_COMPILE_ARGS
-	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG"]
+	compile_args = [*DEFAULT_COMPILE_ARGS,"-g","-UNDEBUG"]
 
 f = [-y(0)**3 + 4*y(0) + y(0)**2]
 g = [5*exp(-y(0)**2+y(0)-Rational(3,2)) + 3]
@@ -64,7 +64,7 @@ amp = lambda t,y: np.array([1])
 class TestStrat(unittest.TestCase):
 	def testError(self):
 		with self.assertRaises(NotImplementedError):
-			SDE = jitcsde_jump( IJI, amp, f, g, ito=False )
+			_SDE = jitcsde_jump( IJI, amp, f, g, ito=False )
 
 class TestCheck(unittest.TestCase):
 	def test_check_index_negative(self):

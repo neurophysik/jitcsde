@@ -158,11 +158,11 @@ class sde_integrator:
 	
 	def get_next_step(self, h):
 		if self.additive:
-			I = self.get_I_SRA(h)
-			self.new_y, E_D, E_N = perform_SRA_step(self.t,h,self.f,self.g,self.state,*I)
+			args = self.get_I_SRA(h)
+			self.new_y, E_D, E_N = perform_SRA_step(self.t,h,self.f,self.g,self.state,*args)
 		else:
-			I = self.get_I(h)
-			self.new_y, E_D, E_N = perform_step(self.t,h,self.f,self.g,self.state,*I)
+			args = self.get_I(h)
+			self.new_y, E_D, E_N = perform_step(self.t,h,self.f,self.g,self.state,*args)
 		self.error = abs(E_D) + abs(E_N)
 		self.new_t = self.t+h
 	
