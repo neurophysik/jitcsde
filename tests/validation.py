@@ -10,6 +10,8 @@ from jitcsde import jitcsde, y
 from jitcsde._python_core import sde_integrator
 
 
+rng = np.random.default_rng(seed=42)
+
 kmax = 6
 thresholds = [0.6,0.6,0.6,0.5,0.5,0.4]
 nbins = 100
@@ -56,7 +58,7 @@ def test_integrator(
 	SDE.set_initial_value( np.array([0.0]) )
 	
 	if pin:
-		size = np.random.exponential(dt)
+		size = rng.exponential(dt)
 		number = int(times(dt,N)[-1]/size)
 		SDE.pin_noise(number,size)
 	
@@ -70,7 +72,7 @@ def cases(scenario):
 	yield dt, lambda: test_python_core(scenario,dt=dt), "Python core"
 	
 	# Tests the noise memory by making random request in-between the steps.
-	each_step = lambda SDE: SDE.get_noise(np.random.exponential(dt))
+	each_step = lambda SDE: SDE.get_noise(rng.exponential(dt))
 	yield (
 		dt,
 		lambda: test_python_core(scenario,dt=dt,each_step=each_step),

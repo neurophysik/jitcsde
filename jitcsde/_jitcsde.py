@@ -668,13 +668,16 @@ class jitcsde_jump(jitcsde):
 		This must be a NumPy array, even if your system is one-dimensional.
 	"""
 	
-	def __init__( self, IJI, amp, *args, **kwargs ):
-		if not kwargs.pop("ito",True):
+	def __init__( self, IJI, amp, *args, rng=None, ito=True, **kwargs ):
+		if not ito:
 			raise NotImplementedError("I don’t know how to convert jumpy Stratonovich SDEs to Itō SDEs – nobody does.")
+		if rng is None:
+			rng = np.random.default_rng()
 		super().__init__(*args, **kwargs)
 		self.IJI = IJI
 		self.amp = amp
 		self._next_jump = None
+		self.rng = rng
 	
 	@property
 	def next_jump(self):
@@ -706,7 +709,7 @@ class jitcsde_jump(jitcsde):
 	def check_amp_function(self):
 		output = self.amp(
 				self.t or 0.0,
-				self.y or np.random.random(self.n)
+				self.y or self.rng.random(self.n)
 			)
 		
 		self._check_assert(
