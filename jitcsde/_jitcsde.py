@@ -102,7 +102,7 @@ class jitcsde(jitcxde):
 		self._determine_additivity(additive)
 		if not ito:
 			if self.additive:
-				warn("No need for conversion from Stratonovich to Itō for additive SDE.")
+				warn("No need for conversion from Stratonovich to Itō for additive SDE.", stacklevel=2)
 			else:
 				self._stratonovich_to_ito()
 		
@@ -535,10 +535,10 @@ class jitcsde(jitcxde):
 		
 		if first_step > max_step:
 			first_step = max_step
-			warn("Decreasing first_step to match max_step")
+			warn("Decreasing first_step to match max_step", stacklevel=2)
 		if min_step > first_step:
 			min_step = first_step
-			warn("Decreasing min_step to match first_step")
+			warn("Decreasing min_step to match first_step", stacklevel=2)
 		
 		assert decrease_threshold>=1.0, "decrease_threshold smaller than 1"
 		assert increase_threshold<=1.0, "increase_threshold larger than 1"
@@ -548,7 +548,7 @@ class jitcsde(jitcxde):
 		assert atol>=0.0, "negative atol"
 		assert rtol>=0.0, "negative rtol"
 		if atol==0 and rtol==0:
-			warn("atol and rtol are both 0. You probably do not want this.")
+			warn("atol and rtol are both 0. You probably do not want this.", stacklevel=2)
 		
 		self.atol = atol
 		self.rtol = rtol
@@ -650,7 +650,7 @@ class jitcsde(jitcxde):
 		assert number>=0, "Number must be non-negative"
 		assert step_size>0, "Step size must be positive"
 		if not isinstance(number,int):
-			warn("`number` does not appear to be a integer. This is very likely cause an error immediately.")
+			warn("`number` does not appear to be a integer. This is very likely cause an error immediately.", stacklevel=2)
 		self.SDE.pin_noise(number,step_size)
 
 class jitcsde_jump(jitcsde):
