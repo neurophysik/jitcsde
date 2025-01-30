@@ -69,7 +69,7 @@ def KMC(Xs, h, kmax=4, nbins=100):
 	
 	# add KMCs and their standard errors to results:
 	for k in range(1,kmax+1):
-		with np.errstate(divide='ignore',invalid='ignore'):
+		with np.errstate(divide="ignore",invalid="ignore"):
 			with warnings.catch_warnings():
 				for message in [
 							"Mean of empty slice.",

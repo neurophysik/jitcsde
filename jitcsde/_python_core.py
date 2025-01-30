@@ -170,7 +170,7 @@ class sde_integrator:
 		return self.state
 	
 	def get_p(self, atol, rtol):
-		with np.errstate(divide='ignore',invalid='ignore'):
+		with np.errstate(divide="ignore",invalid="ignore"):
 			return np.nanmax(self.error/(atol + rtol*np.abs(self.new_y)))
 	
 	def print_noises(self):

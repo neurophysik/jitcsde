@@ -127,7 +127,7 @@ for scenario in scenarios:
 	for dt, runner, name in cases(scenario):
 		ks = list(range(kmax))
 		for _ in range(5):
-			with np.errstate(invalid='ignore'):
+			with np.errstate(invalid="ignore"):
 				ks = kmc_test(dt,runner,ks)
 			if ks:
 				retries += 1
