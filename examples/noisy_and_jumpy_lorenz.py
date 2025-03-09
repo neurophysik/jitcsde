@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 """
 As an example, suppose that we want to add jumps to the noisy Lorenz oscillator from `example`.
 These shall have exponentially distributed waiting times (i.e. they are a Poisson process) with a scale parameter :math:`β=1.0`.
@@ -29,10 +26,12 @@ See `the sources <https://raw.githubusercontent.com/neurophysik/jitcsde/master/e
 """
 
 if __name__ == "__main__":
-	from jitcsde import y, jitcsde_jump
-	import numpy
+	import numpy as np
 	import symengine
+
+	from jitcsde import jitcsde_jump, y
 	
+	rng = np.random.default_rng(seed=42)
 	ρ = 28
 	σ = 10
 	β = symengine.Rational(8,3)
@@ -47,22 +46,22 @@ if __name__ == "__main__":
 	g = [ p*y(i) for i in range(3) ]
 	
 	def IJI(time,state):
-		return numpy.random.exponential(1.0)
+		return rng.exponential(1.0)
 	
 	def jump(time,state):
-		return numpy.array([
+		return np.array([
 				0.0,
 				0.0,
-				numpy.random.normal(0.0,abs(state[2]))
+				rng.normal(0.0,abs(state[2]))
 			])
 
 	SDE = jitcsde_jump(IJI,jump,f,g)
 	
-	initial_state = numpy.random.random(3)
+	initial_state = rng.random(3)
 	SDE.set_initial_value(initial_state,0.0)
 	
 	data = []
-	for time in numpy.arange(0.0, 100.0, 0.01):
+	for time in np.arange(0.0, 100.0, 0.01):
 		data.append( SDE.integrate(time) )
-	numpy.savetxt("timeseries.dat", data)
+	np.savetxt("timeseries.dat", data)
 

@@ -1,14 +1,19 @@
+import unittest
+
 import numpy as np
-from jitcsde._python_core import sde_integrator
 from numpy.testing import assert_allclose, assert_array_equal
 from symengine import Integer
-import unittest
+
+from jitcsde._python_core import sde_integrator
+
+
+rng = np.random.default_rng(seed=42)
 
 test_noise = []
 for _ in range(10):
 	test_noise.append([
-		np.random.exponential(),
-		np.random.normal(2.0),
+		rng.exponential(),
+		rng.normal(2.0),
 	])
 max_h = sum(x[0] for x in test_noise)
 
@@ -35,21 +40,21 @@ class TestNoiseMemory(unittest.TestCase):
 			assert_allclose(actual_DW, control_DW)
 	
 	def test_insertion(self):
-		intermediate_h = np.random.uniform(0,max_h)
+		intermediate_h = rng.uniform(0,max_h)
 		first  = self.SDE.get_noise(intermediate_h)
 		second = self.SDE.get_noise(intermediate_h)
 		assert_array_equal(first,second)
 		self.test_unchanged()
 	
 	def test_extension(self):
-		external_h = np.random.uniform(max_h,2*max_h)
+		external_h = rng.uniform(max_h,2*max_h)
 		first  = self.SDE.get_noise(external_h)
 		second = self.SDE.get_noise(external_h)
 		assert_array_equal(first,second)
 		self.test_unchanged()
 	
 	def test_size_of_noise_memory(self):
-		control_h = np.random.uniform(0,max_h)
+		control_h = rng.uniform(0,max_h)
 		self.SDE.get_noise(control_h)
 		self.SDE.accept_step()
 		current_h = sum(x[0] for x in self.SDE.noises)

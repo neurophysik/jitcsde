@@ -1,7 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-"""
+r"""
 Suppose we want to integrate Lorenz oscillator each of whose components is subject to a diffusion that amounts to :math:`p` of the respective component, i.e.:
 
 .. math::
@@ -72,10 +69,12 @@ Taking everything together, our code is:
 """
 
 if __name__ == "__main__":
-	from jitcsde import y, jitcsde
-	import numpy
+	import numpy as np
 	import symengine
+
+	from jitcsde import jitcsde, y
 	
+	rng = np.random.default_rng(seed=42)
 	ρ = 28
 	σ = 10
 	β = symengine.Rational(8,3)
@@ -91,11 +90,11 @@ if __name__ == "__main__":
 	
 	SDE = jitcsde(f,g)
 	
-	initial_state = numpy.random.random(3)
+	initial_state = rng.random(3)
 	SDE.set_initial_value(initial_state,0.0)
 	
 	data = []
-	for time in numpy.arange(0.0, 100.0, 0.01):
+	for time in np.arange(0.0, 100.0, 0.01):
 		data.append( SDE.integrate(time) )
-	numpy.savetxt("timeseries.dat", data)
+	np.savetxt("timeseries.dat", data)
 

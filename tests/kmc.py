@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
+
+import warnings
 
 import numpy as np
 from scipy.stats import sem
-import warnings
+
 
 def KMC(Xs, h, kmax=4, nbins=100):
 	"""
@@ -47,7 +48,7 @@ def KMC(Xs, h, kmax=4, nbins=100):
 	Max = max(Xs) + (max(Xs)-min(Xs))/nbins*0.5
 	# bin borders
 	X_bins = np.linspace(Min,Max,nbins+1)
-	# intialise results with middles of bins:
+	# initialise results with middles of bins:
 	results = [(X_bins[1:]+X_bins[:-1])/2]
 	
 	def Bin(value):
@@ -68,7 +69,7 @@ def KMC(Xs, h, kmax=4, nbins=100):
 	
 	# add KMCs and their standard errors to results:
 	for k in range(1,kmax+1):
-		with np.errstate(divide='ignore',invalid='ignore'):
+		with np.errstate(divide="ignore",invalid="ignore"):
 			with warnings.catch_warnings():
 				for message in [
 							"Mean of empty slice.",

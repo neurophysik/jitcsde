@@ -1,15 +1,18 @@
+import platform
+import unittest
+
 import numpy as np
 from numpy.testing import assert_allclose
-from jitcsde import jitcsde, y, UnsuccessfulIntegration, test
-import platform
-from symengine import symbols, exp, Rational, Function
-import unittest
+from symengine import Function, Rational, exp, symbols
+
+from jitcsde import UnsuccessfulIntegration, jitcsde, test, y
+
 
 if platform.system() == "Windows":
 	compile_args = None
 else:
 	from jitcxde_common import DEFAULT_COMPILE_ARGS
-	compile_args = DEFAULT_COMPILE_ARGS+["-g","-UNDEBUG"]
+	compile_args = [*DEFAULT_COMPILE_ARGS,"-g","-UNDEBUG"]
 
 # Ensures that all kinds of formatting the input actually work and produce the same result. The correctness of this result itself is checked in validation_test.py.
 
@@ -44,7 +47,7 @@ class CompareResults(unittest.TestCase):
 		self.SDE.compile_C(numpy_rng=True,extra_compile_args=compile_args)
 		self.test_default()
 	
-	def test_reproducability(self):
+	def test_reproducibility(self):
 		self.test_default()
 	
 	def test_Python_core(self):
@@ -108,7 +111,7 @@ def f_generator():
 def g_generator():
 	yield from g
 
-class TestStrat(CompareResults):
+class TestStratWithGenerator(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_generator,g_generator)
 
@@ -116,7 +119,7 @@ class TestStrat(CompareResults):
 f_dict = { y(i):entry for i,entry in enumerate(f) }
 g_dict = { y(i):entry for i,entry in enumerate(g) }
 
-class TestStrat(CompareResults):
+class TestStratWithDict(CompareResults):
 	def setUp(self):
 		self.SDE = jitcsde(f_dict,g_dict)
 

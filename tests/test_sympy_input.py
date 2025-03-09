@@ -2,11 +2,14 @@
 Tests whether things works independent of where symbols are imported from.
 """
 
+import random
+
+import symengine
+import sympy
+
 import jitcsde
 import jitcsde.sympy_symbols
-import sympy
-import symengine
-import random
+
 
 symengine_manually = [
 		symengine.Symbol("t",real=True),
