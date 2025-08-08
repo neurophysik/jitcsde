@@ -1,15 +1,16 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 """
 Tests several incarnations of the integrator by checking whether the Kramers–Moyal coefficients as estimated from the time series comply with the theoretical expectation. This test produces false negatives from time to time, which is inevitable if we do not want false positives to be too likely. In case of a failure, the specific test is re-run. If the number of re-runs for a specific test or the total number of re-runs are too high, it’s time to worry.
 """
 
 import numpy as np
-from jitcsde._python_core import sde_integrator
-from jitcsde import jitcsde, y
 import symengine
 from kmc import KMC
+
+from jitcsde import jitcsde, y
+from jitcsde._python_core import sde_integrator
+
+
+rng = np.random.default_rng(seed=42)
 
 kmax = 6
 thresholds = [0.6,0.6,0.6,0.5,0.5,0.4]
@@ -57,7 +58,7 @@ def test_integrator(
 	SDE.set_initial_value( np.array([0.0]) )
 	
 	if pin:
-		size = np.random.exponential(dt)
+		size = rng.exponential(dt)
 		number = int(times(dt,N)[-1]/size)
 		SDE.pin_noise(number,size)
 	
@@ -71,7 +72,7 @@ def cases(scenario):
 	yield dt, lambda: test_python_core(scenario,dt=dt), "Python core"
 	
 	# Tests the noise memory by making random request in-between the steps.
-	each_step = lambda SDE: SDE.get_noise(np.random.exponential(dt))
+	each_step = lambda SDE: SDE.get_noise(rng.exponential(dt))
 	yield (
 		dt,
 		lambda: test_python_core(scenario,dt=dt,each_step=each_step),
@@ -80,9 +81,9 @@ def cases(scenario):
 	
 	for dt in (0.0001,0.001):
 		for pin in (False,True):
-			name = "integrator with dt=%f" % dt
+			name = f"integrator with dt={dt}"
 			name += " and noise pinning" if pin else ""
-			runner = lambda: test_integrator(scenario,dt=dt,pin=pin)
+			runner = lambda dt=dt, pin=pin: test_integrator(scenario,dt=dt,pin=pin)
 			yield dt, runner, name
 
 def kmc_test(dt,runner,ks):
@@ -128,7 +129,7 @@ for scenario in scenarios:
 	for dt, runner, name in cases(scenario):
 		ks = list(range(kmax))
 		for _ in range(5):
-			with np.errstate(invalid='ignore'):
+			with np.errstate(invalid="ignore"):
 				ks = kmc_test(dt,runner,ks)
 			if ks:
 				retries += 1
@@ -137,9 +138,9 @@ for scenario in scenarios:
 				print( ".", end="", flush=True )
 				break
 		else:
-			raise AssertionError("Testing %s failed five times. Something is probably really wrong" % name)
+			raise AssertionError(f"Testing {name} failed five times. Something is probably really wrong")
 print("")
 
 if retries:
-	print("Number of reruns: %i. This number should only rarely be larger than 5."% retries)
+	print(f"Number of reruns: {retries}. This number should only rarely be larger than 5.")
 

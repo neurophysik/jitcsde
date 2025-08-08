@@ -1,16 +1,16 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-from warnings import warn
-from itertools import count, chain
-from os import path as path
-import shutil
 import random
-import symengine
+import shutil
+from itertools import chain, count
+from os import path as path
+from warnings import warn
+
 import numpy as np
-from jitcxde_common import jitcxde, checker
-from jitcxde_common.helpers import sort_helpers, sympify_helpers, copy_helpers, filter_helpers, find_dependent_helpers
+import symengine
+
+from jitcxde_common import checker, jitcxde
+from jitcxde_common.helpers import copy_helpers, filter_helpers, find_dependent_helpers, sort_helpers, sympify_helpers
 from jitcxde_common.symbolic import collect_arguments, has_function
+
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCSDE, in particular avoiding incompatibilities. You can import a SymPy variant from the submodule `sympy_symbols` instead (see `SymPy vs. SymEngine`_ for details).
 y = symengine.Function("y")
@@ -62,7 +62,7 @@ class jitcsde(jitcxde):
 		
 		*	A SymEngine function object used in `f_sym` to represent the function call. If you want to use any JiTCSDE features that need the derivative, this must have a properly defined `f_diff` method with the derivative being another callback function (or constant).
 		*	The Python function to be called. This function will receive the state array (`y`) as the first argument. All further arguments are whatever you use as arguments of the SymEngine function in `f_sym`. These can be any expression that you might use in the definition of the derivative and contain, e.g., dynamical variables, time, control parameters, and helpers. The only restriction is that the arguments are floats (and not vectors or similar). The return value must also be a float (or something castable to float). It is your responsibility to ensure that this function adheres to these criteria, is deterministic and sufficiently smooth with respect its arguments; expect nasty errors otherwise.
-		*	The number of arguments, **excluding** the state array as mandatory first argument. This means if you have a variadic Python function, you cannot just call it with different numbers of arguments in `f_sym`, but you have to define separate callbacks for each of numer of arguments.
+		*	The number of arguments, **excluding** the state array as mandatory first argument. This means if you have a variadic Python function, you cannot just call it with different numbers of arguments in `f_sym`, but you have to define separate callbacks for each of number of arguments.
 		
 		See `this example <https://github.com/neurophysik/jitcdde/blob/master/examples/sunflower_callback.py>`_ (for JiTCDDE) for how to use this.
 	
@@ -86,7 +86,7 @@ class jitcsde(jitcxde):
 			module_location = None
 		):
 		
-		super(jitcsde,self).__init__(n,verbose,module_location)
+		super().__init__(n,verbose,module_location)
 		
 		if f_sym and not g_sym and not module_location:
 			raise ValueError("You gave f_sym as an argument but neither g_sym nor module_location. JiTCSDE cannot properly work with this.")
@@ -102,7 +102,7 @@ class jitcsde(jitcxde):
 		self._determine_additivity(additive)
 		if not ito:
 			if self.additive:
-				warn("No need for conversion from Stratonovich to Itō for additive SDE.")
+				warn("No need for conversion from Stratonovich to Itō for additive SDE.", stacklevel=2)
 			else:
 				self._stratonovich_to_ito()
 		
@@ -117,7 +117,7 @@ class jitcsde(jitcxde):
 	def _determine_additivity(self,additive):
 		if additive is None:
 			self.additive = (
-					    all( not has_function(entry    ,y) for entry  in self.g_sym()    )
+					all( not has_function(entry    ,y) for entry  in self.g_sym()    )
 					and all( not has_function(helper[1],y) for helper in self._g_helpers )
 					)
 		else:
@@ -211,7 +211,7 @@ class jitcsde(jitcxde):
 	@checker
 	def _check_non_empty(self):
 		for function,name in [(self.f_sym, "f_sym"), (self.g_sym, "g_sym")]:
-			self._check_assert( function(), "%s is empty."%name )
+			self._check_assert( function(), f"{name} is empty." )
 		
 	@checker
 	def _check_valid_arguments(self):
@@ -220,11 +220,11 @@ class jitcsde(jitcxde):
 				for argument in collect_arguments(entry,y):
 					self._check_assert(
 							argument[0] >= 0,
-							"y is called with a negative argument (%i) in component %i of %s." % (argument[0],i,name)
+							f"y is called with a negative argument ({argument[0]}) in component {i} of {name}."
 						)
 					self._check_assert(
 							argument[0] < self.n,
-							"y is called with an argument (%i) higher than the system’s dimension (%i) in component %i of %s."  % (argument[0], self.n,i,name)
+							f"y is called with an argument ({argument[i]}) higher than the system’s dimension ({self.n}) in component {i} of {name}."
 						)
 	
 	@checker
@@ -236,7 +236,7 @@ class jitcsde(jitcxde):
 				for symbol in entry.atoms(symengine.Symbol):
 					self._check_assert(
 							symbol in valid_symbols,
-							"Invalid symbol (%s) in component %i of %s."  % (symbol.name,i,name)
+							f"Invalid symbol ({symbol.name}) in component {i} of {name}."
 						)
 	
 	def reset_integrator(self):
@@ -350,7 +350,7 @@ class jitcsde(jitcxde):
 		if simplify is None:
 			simplify = self.n<=10
 		
-		helper_lengths = dict()
+		helper_lengths = {}
 		
 		for sym,helpers,name,long_name in [
 					( self.f_sym, self._f_helpers, "f", "drift"     ),
@@ -535,10 +535,10 @@ class jitcsde(jitcxde):
 		
 		if first_step > max_step:
 			first_step = max_step
-			warn("Decreasing first_step to match max_step")
+			warn("Decreasing first_step to match max_step", stacklevel=2)
 		if min_step > first_step:
 			min_step = first_step
-			warn("Decreasing min_step to match first_step")
+			warn("Decreasing min_step to match first_step", stacklevel=2)
 		
 		assert decrease_threshold>=1.0, "decrease_threshold smaller than 1"
 		assert increase_threshold<=1.0, "increase_threshold larger than 1"
@@ -548,7 +548,7 @@ class jitcsde(jitcxde):
 		assert atol>=0.0, "negative atol"
 		assert rtol>=0.0, "negative rtol"
 		if atol==0 and rtol==0:
-			warn("atol and rtol are both 0. You probably do not want this.")
+			warn("atol and rtol are both 0. You probably do not want this.", stacklevel=2)
 		
 		self.atol = atol
 		self.rtol = rtol
@@ -568,15 +568,15 @@ class jitcsde(jitcxde):
 	
 	def _control_for_min_step(self):
 		if self.dt < self.min_step:
-			raise UnsuccessfulIntegration("\n"
+			raise UnsuccessfulIntegration(
+				"\n"
 				"Could not integrate with the given tolerance parameters:\n\n"
-				"atol: %e\n"
-				"rtol: %e\n"
-				"min_step: %e\n\n"
+				f"atol: {self.atol:e}\n"
+				f"rtol: {self.rtol:e}\n"
+				f"min_step: {self.min_step:e}\n\n"
 				"The most likely reasons for this are:\n"
 				"• The SDE is ill-posed or stiff.\n"
-				"• You did not allow for an absolute error tolerance (atol) though your SDE calls for it. Even a very small absolute tolerance (1e-16) may sometimes help."
-				% (self.atol, self.rtol, self.min_step))
+				"• You did not allow for an absolute error tolerance (atol) though your SDE calls for it. Even a very small absolute tolerance (1e-16) may sometimes help.")
 	
 	def _adjust_step_size(self, actual_dt):
 		"""
@@ -650,7 +650,7 @@ class jitcsde(jitcxde):
 		assert number>=0, "Number must be non-negative"
 		assert step_size>0, "Step size must be positive"
 		if not isinstance(number,int):
-			warn("`number` does not appear to be a integer. This is very likely cause an error immediately.")
+			warn("`number` does not appear to be a integer. This is very likely cause an error immediately.", stacklevel=2)
 		self.SDE.pin_noise(number,step_size)
 
 class jitcsde_jump(jitcsde):
@@ -668,13 +668,16 @@ class jitcsde_jump(jitcsde):
 		This must be a NumPy array, even if your system is one-dimensional.
 	"""
 	
-	def __init__( self, IJI, amp, *args, **kwargs ):
-		if not kwargs.pop("ito",True):
+	def __init__( self, IJI, amp, *args, rng=None, ito=True, **kwargs ):
+		if not ito:
 			raise NotImplementedError("I don’t know how to convert jumpy Stratonovich SDEs to Itō SDEs – nobody does.")
-		super(jitcsde_jump,self).__init__(*args, **kwargs)
+		if rng is None:
+			rng = np.random.default_rng()
+		super().__init__(*args, **kwargs)
 		self.IJI = IJI
 		self.amp = amp
 		self._next_jump = None
+		self.rng = rng
 	
 	@property
 	def next_jump(self):
@@ -684,29 +687,29 @@ class jitcsde_jump(jitcsde):
 		return self._next_jump
 	
 	def reset_integrator(self):
-		super(jitcsde_jump,self).reset_integrator()
+		super().reset_integrator()
 		self._next_jump = None
 	
 	def integrate(self, target_time):
 		while self.next_jump<target_time:
-			state = super(jitcsde_jump,self).integrate(self.next_jump)
+			state = super().integrate(self.next_jump)
 			time = self.t
 			self.SDE.apply_jump( self.amp(time,state) )
 			self._next_jump = self.t + self.IJI(time,self.y)
 		
-		return super(jitcsde_jump,self).integrate(target_time)
+		return super().integrate(target_time)
 	
 	def check(self, fail_fast=True):
 		"""
 			Same as jitcsde’s check, but additionally checks the output of the amp function (by calling it).
 		"""
-		super(jitcsde_jump,self).check(fail_fast)
+		super().check(fail_fast)
 	
 	@checker
 	def check_amp_function(self):
 		output = self.amp(
 				self.t or 0.0,
-				self.y or np.random.random(self.n)
+				self.y or self.rng.random(self.n)
 			)
 		
 		self._check_assert(

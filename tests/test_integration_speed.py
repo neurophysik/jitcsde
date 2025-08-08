@@ -1,6 +1,8 @@
-from jitcsde import jitcsde, y
-from jitcode import jitcode
 import numpy as np
+from jitcode import jitcode
+
+from jitcsde import jitcsde, y
+
 
 """
 Tests the SDE integrator by comparing the trajectories of:
@@ -11,6 +13,8 @@ Tests the SDE integrator by comparing the trajectories of:
 Inspired by:
 	https://math.stackexchange.com/q/2712378
 """
+
+rng = np.random.default_rng(seed=42)
 
 # The dynamics used for testing
 # -----------------------------
@@ -25,7 +29,7 @@ F = [
 		d*(b*y(0) - c/d*y(1)),
 	]
 
-initial_state = np.random.random(2)
+initial_state = rng.random(2)
 
 # Integrating the ODE
 #--------------------

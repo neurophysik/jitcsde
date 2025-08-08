@@ -1,5 +1,6 @@
 from numpy import array
 
+
 A0 = array([
 		[ 0 , 0],
 		[3/4, 0],
@@ -31,7 +32,7 @@ def perform_step(t,h,f,g,y,I_1,I_10):
 		X_bar = y + sum( α[i] * f(t+c0[i]*h,H0[i]) * h for i in range(2) )
 		for i in range(2):
 			X_bar += g( t+c1[i]*h ) * (
-							  β1[i] * I_1
+							β1[i] * I_1
 							+ β2[i] * I_10  / h
 						)
 		return X_bar
