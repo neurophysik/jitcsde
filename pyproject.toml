@@ -104,3 +104,5 @@ lines-after-imports = 2
 [tool.typos.default.extend-words]
 # short for Stratonovich used in various names
 strat = "strat"
+# scipy.stats.sem (standard error of the mean)
+sems = "sems"
