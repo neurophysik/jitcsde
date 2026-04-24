@@ -3,25 +3,23 @@ Suppose we want to integrate Lorenz oscillator each of whose components is subje
 
 .. math::
 
-	f(y) = \\left(
-	\\begin{matrix}
-		σ (y_1-y_0)\\\\
-		y_0 (ρ-y_2)-y_1\\\\
+	f(y) = \left(
+	\begin{matrix}
+		σ (y_1-y_0)\\
+		y_0 (ρ-y_2)-y_1\\
 		y_0 y_1 - β y_2
-	\\end{matrix} \\right),
-
+	\end{matrix} \right),
+	
 	\qquad
 	
-	g(y) = \\left(
-	\\begin{matrix}
-		p y_0 \\\\
-		p y_1 \\\\
+	g(y) = \left(
+	\begin{matrix}
+		p y_0 \\
+		p y_1 \\
 		p y_2
-	\\end{matrix} \\right),
+	\end{matrix} \right),
 
-.. math::
-
-First we do some importing and define the constants, which we want to be :math:`ρ = 28`, :math:`σ = 10`, :math:`β =\\frac{8}{3}`, and :math:`p=0.1`:
+First we do some importing and define the constants, which we want to be :math:`ρ = 28`, :math:`σ = 10`, :math:`β =\frac{8}{3}`, and :math:`p=0.1`:
 
 .. literalinclude:: ../examples/noisy_lorenz.py
 	:dedent: 1
